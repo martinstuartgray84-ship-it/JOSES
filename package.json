@@ -5,17 +5,29 @@
   "description": "Commission-free restaurant reservations: availability engine and Supabase schema",
   "type": "module",
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "test:db": "bash supabase/tests/run.sh"
+    "test:db": "bash supabase/tests/run.sh",
+    "db:start": "bash scripts/local-db.sh start",
+    "db:stop": "bash scripts/local-db.sh stop",
+    "db:reset": "bash scripts/local-db.sh reset"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
   },
   "dependencies": {
-    "postgres": "^3.4.9"
+    "next": "^16.3.8",
+    "postgres": "^3.4.9",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
   }
 }

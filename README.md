@@ -9,6 +9,9 @@ It's built for one company running two sites. Each site has its own floor plan, 
 | Availability engine | `src/availability` | A pure TypeScript function that decides which start times to offer a party, and which tables to use |
 | Booking service | `src/server/booking.ts` | Loads a site's day from Postgres, runs the engine, and creates bookings safely under concurrent requests |
 | Core schema | `supabase/migrations` | The Postgres data model, plus a constraint that stops the database ever double-booking a table |
+| Booking widget | `app/book` | Guest booking flow: site, party size, date, time, details. Works as a page or an iframe embed |
+| Manage page | `app/manage/[token]` | The guest's private link to view or cancel their booking |
+| API routes | `app/api` | `GET /api/sites`, `GET /api/availability`, `POST /api/bookings`, `DELETE /api/manage/:token` |
 | Seed | `supabase/seed.sql` | Placeholder company with two sites, for local development |
 
 ## Availability engine
@@ -58,6 +61,27 @@ Here's what's in it:
 
 **Row-level security:** company-wide staff see both sites. Site staff see only their own site's diary, but the whole guest list. Hosts run day-to-day bookings, and managers also edit configuration. Public booking goes through server routes that use the service role, so guests never query tables directly. Each booking gets a `manage_token` for the guest's self-serve amend/cancel link.
 
+## Running the app locally
+
+```sh
+npm install
+npm run db:start   # local Postgres on :54322 with schema + two-site seed (needs Postgres 15+ installed)
+cp .env.example .env.local
+npm run dev        # http://localhost:3000/book
+```
+
+`npm run db:reset` wipes and reseeds; `npm run db:stop` stops it.
+
+## Embedding on your websites
+
+Each site's website can embed its own widget, with no site picker:
+
+```html
+<iframe src="https://book.example.com/book?site=site-one" style="width:100%;max-width:560px;height:900px;border:0" title="Book a table"></iframe>
+```
+
+Add the website's origin to `EMBED_ORIGINS`, or browsers will refuse to show the iframe. Manage pages can never be embedded and send no referrer, so the private token doesn't leak.
+
 ## Running tests
 
 ```sh
@@ -73,7 +97,7 @@ npm run test:db    # throwaway Postgres 15+: migrations, seed, SQL tests, then b
 
 1. ~~Availability engine~~ and ~~core schema~~
 2. ~~Booking service~~ (availability and create-booking against Postgres)
-3. Next.js app: API routes over the booking service, and an embeddable booking widget with a site picker
+3. ~~Next.js app~~: API routes, embeddable booking widget with a site picker, guest view/cancel page
 4. Host diary for tablets: timeline and floor plan, updated live via Supabase realtime
 5. Admin console for services, tables and payment rules
 6. Stripe: SetupIntents for card holds, deposits and no-show fees

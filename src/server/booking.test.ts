@@ -3,6 +3,7 @@
 import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { BookingError, createBooking, siteAvailability } from "./booking";
+import { cancelBookingByToken, getBookingByToken, listSites } from "./manage";
 
 const url = process.env.DATABASE_URL;
 const hm = (h: number, m = 0) => h * 60 + m;
@@ -138,5 +139,30 @@ describe.skipIf(!url)("booking service", () => {
       expect(booked.reduce((x, y) => x + y, 0)).toBeLessThanOrEqual(4);
       expect(booked.length).toBeGreaterThan(0);
     }
+  });
+
+  it("lists only the requested company's sites", async () => {
+    const { a, b } = await company();
+    const company2 = a.slug.replace(/-a$/, "");
+    expect((await listSites(sql, company2)).map((s) => s.slug)).toEqual([a.slug, b.slug]);
+  });
+
+  it("lets a guest view and cancel by token, once, and frees the table", async () => {
+    const { b } = await company();
+    const booking = await book(b, hm(19), { specialRequests: "Window please" });
+    const view = await getBookingByToken(sql, booking.manageToken, now);
+    expect(view).toMatchObject({ siteSlug: b.slug, covers: 2, status: "confirmed", cancellable: true, firstName: "Ana" });
+    expect(await cancelBookingByToken(sql, booking.manageToken, now)).toBe(true);
+    expect(await cancelBookingByToken(sql, booking.manageToken, now)).toBe(false);
+    expect((await getBookingByToken(sql, booking.manageToken, now))?.cancellable).toBe(false);
+    await expect(book(b, hm(19))).resolves.toBeTruthy();
+  });
+
+  it("won't cancel after the booking time or with a malformed token", async () => {
+    const { b } = await company();
+    const booking = await book(b, hm(19));
+    expect(await cancelBookingByToken(sql, booking.manageToken, new Date("2026-10-09T19:00:00Z"))).toBe(false);
+    expect(await cancelBookingByToken(sql, "' or 1=1 --", now)).toBe(false);
+    expect(await getBookingByToken(sql, "nope", now)).toBeNull();
   });
 });
