@@ -3,11 +3,11 @@
 -- guests, bookings (with no-shows and cancellations), checks with per-item
 -- kitchen timings (slower at weekend peaks), comps, payments and tips.
 -- Deterministic: same output every run on a fresh seed.
---   psql "$DATABASE_URL" -v days=56 -f supabase/demo/history.sql
+--   psql "$DATABASE_URL" -v days=120 -f supabase/demo/history.sql
 
 \if :{?days}
 \else
-  \set days 56
+  \set days 120
 \endif
 
 select setseed(0.4242);
@@ -67,7 +67,7 @@ begin
             if random() > p then continue; end if;
 
             covers := greatest(tbl.min_covers, least(tbl.max_covers, tbl.min_covers + floor(random() * (tbl.max_covers - tbl.min_covers + 1))::int));
-            guest := guests[1 + floor(array_length(guests, 1) * power(random(), 2.3))::int];
+            guest := guests[1 + floor(array_length(guests, 1) * power(random(), 1.7))::int];
             if random() < 0.18 then guest := null; end if;   -- walk-in
             peak := dow in (5, 6) and slot = '19:00';
             t0 := (d + slot) at time zone v.timezone + make_interval(mins => floor(random() * 35)::int);
@@ -216,3 +216,15 @@ begin
     end loop;
   end loop;
 end $$;
+
+-- Give the demo guest list some texture: birthdays, tags, allergies, consent.
+update guests set
+  birthday_month = 1 + (abs(hashtext(email)) % 12),
+  birthday_day = 1 + (abs(hashtext(email || 'd')) % 28)
+where email like 'guest%@example.com' and abs(hashtext(email)) % 3 = 0;
+update guests set consent_at = created_at, consent_source = 'online booking'
+where email like 'guest%@example.com' and marketing_opt_in;
+update guests set tags = array['wine club'] where email like 'guest%@example.com' and abs(hashtext(email || 't')) % 9 = 0;
+update guests set tags = tags || array['vip'] where email in ('guest1@example.com', 'guest2@example.com', 'guest3@example.com');
+update guests set allergies = (array['Coeliac', 'Severe nut allergy', 'No shellfish', 'Lactose intolerant'])[1 + abs(hashtext(email || 'a')) % 4]
+where email like 'guest%@example.com' and abs(hashtext(email || 'a')) % 11 = 0;

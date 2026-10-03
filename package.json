@@ -14,7 +14,8 @@
     "test:db": "bash supabase/tests/run.sh",
     "db:start": "bash scripts/local-db.sh start",
     "db:stop": "bash scripts/local-db.sh stop",
-    "db:reset": "bash scripts/local-db.sh reset"
+    "db:reset": "bash scripts/local-db.sh reset",
+    "db:demo": "psql postgres://postgres@localhost:54322/postgres -v ON_ERROR_STOP=1 -q -o /dev/null -f supabase/demo/history.sql"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

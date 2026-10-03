@@ -43,3 +43,15 @@ export async function act<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
     return { ok: false, error: "Something went wrong. Please try again." };
   }
 }
+
+/** The company the staff app manages (COMPANY_SLUG, or the only one there is). */
+export async function staffCompany(): Promise<{ id: string; name: string }> {
+  if (!(await isStaff())) throw new NotSignedIn("Your session has expired. Please sign in again.");
+  const sql = db();
+  const slug = process.env.COMPANY_SLUG;
+  const [c] = slug
+    ? await sql`select id, name from companies where slug = ${slug}`
+    : await sql`select id, name from companies order by created_at limit 1`;
+  if (!c) throw new Error("No company set up yet");
+  return { id: c.id, name: c.name };
+}

@@ -1,0 +1,33 @@
+.mk-page h2 { margin: 0 0 10px; font-size: 1.1rem; }
+.mk-page h3 { margin: 14px 0 6px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.notice { margin: 0; padding: 10px 14px; border-radius: 8px; background: var(--st-pending-bg); border: 1px solid var(--st-pending); }
+.seg-list button { padding: 6px 12px; border-radius: 999px; font-size: 0.9rem; }
+.seg-list button.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.composer { display: grid; gap: 12px; }
+.composer-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+@media (max-width: 900px) { .composer-grid { grid-template-columns: minmax(0, 1fr); } }
+.composer-left { display: grid; gap: 10px; align-content: start; }
+.custom-seg { border: 1px dashed var(--line); border-radius: 8px; padding: 8px 12px; }
+.custom-seg summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+.custom-seg[open] { display: grid; gap: 8px; }
+.audience { background: var(--bg); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+.aud-count { margin: 0; font-size: 1.05rem; }
+.aud-count strong { font-size: 1.4rem; }
+.mini { padding: 4px 10px; font-size: 0.82rem; }
+.email-preview { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #f7f4ef; }
+.ep-subject { padding: 10px 12px; background: var(--card); border-bottom: 1px solid var(--line); font-weight: 600; }
+.email-preview iframe { width: 100%; height: 520px; border: 0; display: block; background: #f7f4ef; }
+.composer-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; }
+.test-send { display: flex; gap: 6px; }
+.test-send input { width: 220px; }
+.drafts { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.drafts li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.autos { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.auto { border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; align-content: start; }
+.auto.on { border-color: var(--st-seated); box-shadow: inset 4px 0 0 var(--st-seated); }
+.auto-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.auto-head h3 { margin: 0; text-transform: none; letter-spacing: 0; color: var(--text); font-size: 1rem; }
+.auto details { display: grid; gap: 8px; }
+.auto details[open] { display: grid; gap: 8px; }
+.switch { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.switch input { width: 20px; height: 20px; }

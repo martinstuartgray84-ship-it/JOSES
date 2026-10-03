@@ -1,19 +1,31 @@
 # JOSES
 
-A commission-free restaurant reservation platform: online booking, a table diary, and a guest CRM, with no per-cover fees and no add-on charges.
+One system for running the restaurant: bookings, the till, kitchen and bar screens, the menu, guests, marketing and the owner's numbers. No per-cover fees, no add-ons. See [docs/PRODUCT.md](docs/PRODUCT.md) for the feature decisions and why.
 
-It's built for one company running two sites. Each site has its own floor plan, services and diary. Guests are shared across the company, so a regular at one site is recognised at the other.
+It's built for one company running two sites. Each site has its own floor plan, services, diary, stations and tills. The menu and the guest list are shared across the company, so a regular at one site is recognised at the other.
 
-| Piece | Where | What it does |
+| Screen | Where | What it does |
 |---|---|---|
-| Availability engine | `src/availability` | A pure TypeScript function that decides which start times to offer a party, and which tables to use |
-| Booking service | `src/server/booking.ts` | Loads a site's day from Postgres, runs the engine, and creates bookings safely under concurrent requests |
-| Core schema | `supabase/migrations` | The Postgres data model, plus a constraint that stops the database ever double-booking a table |
-| Booking widget | `app/book` | Guest booking flow: site, party size, date, time, details. Works as a page or an iframe embed |
-| Host diary | `app/diary` | Staff view of each site's day: timeline of tables against time, floor plan at any moment, and seat / finish / no-show / cancel |
-| Manage page | `app/manage/[token]` | The guest's private link to view or cancel their booking |
-| API routes | `app/api` | `GET /api/sites`, `GET /api/availability`, `POST /api/bookings`, `DELETE /api/manage/:token` |
-| Seed | `supabase/seed.sql` | Placeholder company with two sites, for local development |
+| Booking widget | `/book` | Guests book online; embeddable per site |
+| Manage booking | `/manage/<token>` | Guest's private link to view or cancel |
+| Diary | `/diary/<site>` | Timeline and floor plan of the day's bookings; seat, finish, no-show |
+| Till | `/pos/<site>` | PIN sign-in, tables, checks, seats, courses, send/fire, voids, comps, discounts, split payments |
+| Kitchen & bar | `/kds/<site>/<station>` | Station screens with cook-to-sync sequencing, timers, all-day counts, bump and recall; the pass |
+| Menu | `/menu/<site>` | Edit items, prices, GP%, allergens, routing, prep times; 86 and stock per site; spreadsheet import |
+| Dashboard | `/dashboard` | Sales, covers, spend per head, service speed, slow dishes, menu engineering, busy times, bookings, guests, team |
+| Guests | `/guests` | Every guest with visits and spend; segments; full profile with favourites, history, allergies, consent |
+| Marketing | `/marketing` | Campaigns to segments with live preview and test send; win-back, thank-you and birthday automations; results by return visits |
+
+| Code | Where |
+|---|---|
+| Availability engine | `src/availability` |
+| Bill maths (VAT, service, splits) | `src/pos/totals.ts` |
+| Kitchen sequencing (cook to sync) | `src/kitchen/sequencing.ts` |
+| Menu import parser | `src/menu/import.ts` |
+| Segments and email templates | `src/marketing` |
+| Server services | `src/server/*.ts` (bookings, diary, menu, orders, kitchen, analytics, crm, marketing) |
+| Schema | `supabase/migrations` |
+| Seed and demo history | `supabase/seed.sql`, `supabase/demo/history.sql` |
 
 ## Availability engine
 
@@ -67,11 +79,28 @@ Here's what's in it:
 ```sh
 npm install
 npm run db:start   # local Postgres on :54322 with schema + two-site seed (needs Postgres 15+ installed)
-cp .env.example .env.local
-npm run dev        # http://localhost:3000/book
+npm run db:demo    # optional: 120 days of made-up history so the dashboard has something to show
+cp .env.example .env.local   # set STAFF_PASSWORD and STAFF_SESSION_SECRET
+npm run dev        # http://localhost:3000/book (guests) and /diary (staff)
 ```
 
-`npm run db:reset` wipes and reseeds; `npm run db:stop` stops it.
+`npm run db:reset` wipes and reseeds; `npm run db:stop` stops it. Seeded till PINs: Maria 1111, Tom 2222, Aisha 3333, Leo 4444 (change them).
+
+## Till and kitchen
+
+- **Send and fire.** Send goes to the stations straight away: drinks always, plus food up to the first course not yet in the kitchen. Later courses are held, and the check shows *Fire mains · ~14m* when the earlier course is done. One ticket is made per station and course.
+- **Cook to sync.** Each ticket's target is its fire time plus its longest dish. Every item gets a start-by time, so a 14-minute steak says *Start now*, the burger *Start in 4m* and the fries *Start in 9m*. Station screens order tickets by who must start soonest; rush tickets jump the queue.
+- **Bar and pass.** Bar tickets are served as soon as they're made. Kitchen plates go to the pass, which shows what's waiting and marks it served. A site without a pass station serves plates on ready.
+- **Timing.** Every item records ordered, sent, started, ready and served, which is what the dashboard's service-speed numbers come from.
+- **Stock.** Set a portion count on an item and it counts down as items are sent, 86ing itself at zero.
+
+## Marketing
+
+- Only guests who opted in, haven't unsubscribed and have an email are ever messaged. Each opt-in records when and how it was given.
+- Every email has a one-click unsubscribe (`List-Unsubscribe` headers and `/u/<token>`).
+- Delivery uses [Resend](https://resend.com) when `RESEND_API_KEY` and `EMAIL_FROM` are set. Without them, sends are recorded as "logged" and nothing is delivered.
+- Results lead with **came back**: recipients with a paid visit within 30 days. Opens are tracked with a pixel but are only a rough guide.
+- Automations run when something calls `GET /api/cron/automations` with `Authorization: Bearer $CRON_SECRET`; hourly is ideal. Each guest gets an automation at most once per occasion, and at most one automated email a week.
 
 ## Host diary
 
@@ -114,8 +143,8 @@ npm run test:db    # throwaway Postgres 15+: migrations, seed, SQL tests, then b
 1. ~~Availability engine~~ and ~~core schema~~
 2. ~~Booking service~~ (availability and create-booking against Postgres)
 3. ~~Next.js app~~: API routes, embeddable booking widget with a site picker, guest view/cancel page
-4. ~~Host diary~~: timeline, floor plan and status actions (next: walk-ins, phone bookings, moving tables, per-person logins, realtime instead of polling)
-5. Admin console for services, tables and payment rules
-6. Stripe: SetupIntents for card holds, deposits and no-show fees
-7. Email and SMS confirmations, reminders, and the amend/cancel link
-8. Later: waitlist, vouchers, events, EPOS integration, reporting
+4. ~~Host diary~~: timeline, floor plan and status actions
+5. ~~Menu, till, kitchen and bar screens~~
+6. ~~Owner dashboard~~
+7. ~~Guest CRM and marketing~~
+8. Next: booking confirmation and reminder emails; walk-ins and phone bookings from the diary; per-person logins (Supabase Auth); settings screens for services, tables and stations; card terminals (Stripe Terminal or Dojo); deposits and card holds; receipt printing; realtime instead of polling
