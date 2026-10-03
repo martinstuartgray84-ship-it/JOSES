@@ -118,7 +118,8 @@ describe("splits", () => {
 });
 
 it("formats money", () => {
-  expect(formatMoney(123456)).toBe("£1234.56");
+  expect(formatMoney(123456)).toBe("£1,234.56");
+  expect(formatMoney(123456789)).toBe("£1,234,567.89");
   expect(formatMoney(5)).toBe("£0.05");
   expect(formatMoney(-250)).toBe("-£2.50");
 });

@@ -70,3 +70,9 @@
 .tbl td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 .tbl tr:last-child td { border-bottom: 0; }
 .tbl-wrap { overflow-x: auto; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--card); }
+.seg button { border: 0; border-radius: 0; padding: 7px 14px; }
+.seg button[aria-selected="true"], .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+.page > * { min-width: 0; }
+.seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.seg button { white-space: nowrap; flex: none; }

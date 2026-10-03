@@ -164,5 +164,6 @@ export function splitBySeat(input: {
 export const formatMoney = (pence: number) => {
   const sign = pence < 0 ? "-" : "";
   const abs = Math.abs(pence);
-  return `${sign}£${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, "0")}`;
+  const pounds = Math.floor(abs / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${sign}£${pounds}.${String(abs % 100).padStart(2, "0")}`;
 };
