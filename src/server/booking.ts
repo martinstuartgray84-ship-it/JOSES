@@ -45,6 +45,10 @@ export class BookingError extends Error {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** A real calendar date (rejects 2026-02-30, which Date.parse accepts). */
+export const isRealDate = (d: string) =>
+  DATE_RE.test(d) && !Number.isNaN(Date.parse(`${d}T00:00:00Z`)) && new Date(`${d}T00:00:00Z`).toISOString().slice(0, 10) === d;
+
 /** Bookings that started up to this long before local midnight can still hold tables. */
 const LOOKBACK_HOURS = 12;
 
@@ -70,9 +74,7 @@ export async function loadSiteDay(
   date: string,
   opts: { channel?: Channel; now?: Date } = {},
 ): Promise<SiteDay> {
-  if (!DATE_RE.test(date) || Number.isNaN(Date.parse(date))) {
-    throw new BookingError("invalid_date", `Invalid date ${date}`);
-  }
+  if (!isRealDate(date)) throw new BookingError("invalid_date", `Invalid date ${date}`);
   const site = await getSite(sql, slug);
   const channel = opts.channel ?? "online";
   const now = opts.now ?? new Date();
@@ -178,6 +180,9 @@ export async function loadSiteDay(
   if (channel === "online") {
     if (day.daysAhead > site.bookingWindowDays) venue.services = [];
     notBefore = day.nowMinutes + site.minNoticeMinutes;
+  } else {
+    // Staff can book anything still ahead of now (walk-ins use createWalkIn).
+    notBefore = day.nowMinutes;
   }
 
   return {
@@ -237,18 +242,27 @@ export interface CreatedBooking {
 /**
  * Find or create the guest in the company-wide list. Matches on email first,
  * then phone, so a regular at one site is recognised at the other.
+ * Existing details are only filled in, never overwritten (anyone can type any
+ * email into a booking form), and an earlier unsubscribe always wins over a
+ * ticked box. Changing details is done from the guest profile.
  */
-export async function upsertGuest(sql: Db, companyId: string, g: GuestDetails): Promise<string> {
+export async function upsertGuest(sql: Db, companyId: string, g: GuestDetails, consentSource = "online booking"): Promise<string> {
   const email = g.email?.trim().toLowerCase() || null;
+  const optIn = g.marketingOptIn ?? false;
   const phone = g.phone?.replace(/[^\d+]/g, "") || null;
   if (email) {
     const [row] = await sql<{ id: string }[]>`
-      insert into guests (company_id, first_name, last_name, email, phone, marketing_opt_in)
-      values (${companyId}, ${g.firstName}, ${g.lastName ?? null}, ${email}, ${phone}, ${g.marketingOptIn ?? false})
+      insert into guests (company_id, first_name, last_name, email, phone, marketing_opt_in, consent_at, consent_source)
+      values (${companyId}, ${g.firstName}, ${g.lastName ?? null}, ${email}, ${phone}, ${optIn},
+              ${optIn ? new Date() : null}, ${optIn ? consentSource : null})
       on conflict (company_id, lower(email)) where email is not null
-      do update set phone = coalesce(excluded.phone, guests.phone),
-                    last_name = coalesce(excluded.last_name, guests.last_name),
-                    marketing_opt_in = guests.marketing_opt_in or excluded.marketing_opt_in
+      do update set phone = coalesce(guests.phone, excluded.phone),
+                    last_name = coalesce(guests.last_name, excluded.last_name),
+                    marketing_opt_in = guests.marketing_opt_in or (excluded.marketing_opt_in and guests.unsubscribed_at is null),
+                    consent_at = case when not guests.marketing_opt_in and excluded.marketing_opt_in and guests.unsubscribed_at is null
+                                      then excluded.consent_at else guests.consent_at end,
+                    consent_source = case when not guests.marketing_opt_in and excluded.marketing_opt_in and guests.unsubscribed_at is null
+                                          then excluded.consent_source else guests.consent_source end
       returning id`;
     return row!.id;
   }
@@ -259,8 +273,8 @@ export async function upsertGuest(sql: Db, companyId: string, g: GuestDetails): 
     if (found) return found.id;
   }
   const [row] = await sql<{ id: string }[]>`
-    insert into guests (company_id, first_name, last_name, phone, marketing_opt_in)
-    values (${companyId}, ${g.firstName}, ${g.lastName ?? null}, ${phone}, ${g.marketingOptIn ?? false})
+    insert into guests (company_id, first_name, last_name, phone, marketing_opt_in, consent_at, consent_source)
+    values (${companyId}, ${g.firstName}, ${g.lastName ?? null}, ${phone}, ${optIn}, ${optIn ? new Date() : null}, ${optIn ? consentSource : null})
     returning id`;
   return row!.id;
 }
@@ -282,7 +296,13 @@ export async function createBooking(sql: Sql, input: CreateBookingInput): Promis
         const service = day.request.venue.services.find((s) => s.id === input.serviceId);
         if (!service) throw new BookingError("unavailable", "That service isn't available on this date");
 
-        const slot = allocate({ ...day.request, covers: input.covers, serviceId: service.id, time: input.time });
+        let slot;
+        try {
+          slot = allocate({ ...day.request, covers: input.covers, serviceId: service.id, time: input.time });
+        } catch {
+          // Service not running that day, or a time off the slot grid.
+          throw new BookingError("unavailable", "That time isn't available");
+        }
         if (!slot.available || !slot.assignment) {
           throw new BookingError("unavailable", `No availability: ${slot.reason}`, slot);
         }
@@ -311,6 +331,104 @@ export async function createBooking(sql: Sql, input: CreateBookingInput): Promis
       const raced = (err as { code?: string }).code === "23P01";
       if (raced && attempt < MAX_ATTEMPTS) continue;
       if (raced) throw new BookingError("conflict", "That time was just taken, please pick another");
+      throw err;
+    }
+  }
+}
+
+/** Local date (YYYY-MM-DD) and minutes since local midnight for an instant. */
+export function localParts(at: Date, timezone: string): { date: string; minutes: number; dow: number } {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    weekday: "short",
+  }).formatToParts(at);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  const dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday"));
+  return { date: `${get("year")}-${get("month")}-${get("day")}`, minutes: Number(get("hour")) * 60 + Number(get("minute")), dow };
+}
+
+export interface WalkInInput {
+  siteSlug: string;
+  covers: number;
+  /** Seat at this table (it must be free and fit the party). Otherwise the best fit. */
+  tableId?: string | null;
+  guest?: GuestDetails | null;
+  now?: Date;
+}
+
+/**
+ * Seat a walk-in now. Uses the engine with a one-off slot at the current minute,
+ * so table fit, joins and overlaps follow the same rules as bookings, and the
+ * exclusion constraint still guards the write.
+ */
+export async function createWalkIn(sql: Sql, input: WalkInInput): Promise<CreatedBooking> {
+  if (!Number.isInteger(input.covers) || input.covers < 1 || input.covers > 50) {
+    throw new BookingError("unavailable", "Covers must be between 1 and 50");
+  }
+  const now = input.now ?? new Date();
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await sql.begin(async (tx) => {
+        const site = await getSite(tx, input.siteSlug);
+        const local = localParts(now, site.timezone);
+        await tx`select pg_advisory_xact_lock(hashtextextended(${`booking:${input.siteSlug}:${local.date}`}, 0))`;
+        const day = await loadSiteDay(tx, input.siteSlug, local.date, { channel: "staff", now });
+        // The service running now, or the nearest one today, sets turn time and buffer.
+        const dist = (sv: VenueConfig["services"][number]) =>
+          local.minutes < sv.firstSeating ? sv.firstSeating - local.minutes : local.minutes > sv.lastSeating + 120 ? local.minutes - sv.lastSeating : 0;
+        const svc = [...day.request.venue.services].sort((a, b) => dist(a) - dist(b))[0];
+        if (!svc) throw new BookingError("unavailable", "No service runs today. Add one before seating walk-ins.");
+        const { turnTimes, bufferMinutes } = svc;
+        const tables = input.tableId ? day.request.venue.tables.filter((t) => t.id === input.tableId) : day.request.venue.tables;
+        if (input.tableId && tables.length === 0) throw new BookingError("unavailable", "That table isn't at this site");
+        const oneOff = {
+          id: svc.id,
+          name: "Walk-in",
+          daysOfWeek: [local.dow],
+          firstSeating: local.minutes,
+          lastSeating: local.minutes,
+          slotIntervalMinutes: 15,
+          turnTimes,
+          bufferMinutes,
+          minCovers: 1,
+          maxCovers: 50,
+        };
+        const slot = allocate({
+          ...day.request,
+          dayOfWeek: local.dow,
+          notBefore: undefined,
+          covers: input.covers,
+          // A chosen table is used even if it's normally joined for bigger parties.
+          venue: { tables, combinations: input.tableId ? [] : day.request.venue.combinations, services: [oneOff] },
+          serviceId: svc.id,
+          time: local.minutes,
+        });
+        if (!slot.available || !slot.assignment) {
+          throw new BookingError(
+            "unavailable",
+            input.tableId ? "That table is taken or too small right now" : `No free table for ${input.covers} right now`,
+            slot,
+          );
+        }
+        const hasGuest = !!(input.guest && (input.guest.firstName?.trim() || input.guest.email || input.guest.phone));
+        const guestId = hasGuest ? await upsertGuest(tx, site.companyId, { ...input.guest!, firstName: input.guest!.firstName?.trim() || "Guest" }) : null;
+        const [booking] = await tx<{ id: string; manage_token: string; starts_at: Date }[]>`
+          insert into bookings (venue_id, service_id, guest_id, covers, starts_at, duration_minutes, buffer_minutes, status, channel)
+          values (${site.id}, ${svc.id}, ${guestId}, ${input.covers}, ${now}, ${slot.durationMinutes}, ${bufferMinutes}, 'seated', 'walk_in')
+          returning id, manage_token, starts_at`;
+        await tx`insert into booking_tables ${tx(slot.assignment.tableIds.map((table_id) => ({ booking_id: booking!.id, table_id })))}`;
+        return { id: booking!.id, manageToken: booking!.manage_token, guestId: guestId ?? "", startsAt: booking!.starts_at, tableIds: slot.assignment.tableIds };
+      });
+    } catch (err) {
+      const raced = (err as { code?: string }).code === "23P01";
+      if (raced && attempt < MAX_ATTEMPTS) continue;
+      if (raced) throw new BookingError("conflict", "That table was just taken. Try again.");
       throw err;
     }
   }

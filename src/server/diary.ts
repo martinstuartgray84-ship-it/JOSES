@@ -2,7 +2,7 @@
 // and the totals a host glances at before service.
 
 import type { Sql } from "postgres";
-import { BookingError, getSite } from "./booking";
+import { BookingError, getSite, isRealDate } from "./booking";
 
 import { allowedTransitions, type DiaryStatus } from "../lib/diary-shared";
 
@@ -67,12 +67,8 @@ export interface Diary {
   blocks: DiaryBlock[];
 }
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
 export async function loadDiary(sql: Sql, siteSlug: string, date: string): Promise<Diary> {
-  if (!DATE_RE.test(date) || Number.isNaN(Date.parse(date))) {
-    throw new BookingError("invalid_date", `Invalid date ${date}`);
-  }
+  if (!isRealDate(date)) throw new BookingError("invalid_date", `Invalid date ${date}`);
   const site = await getSite(sql, siteSlug);
   const tz = site.timezone;
   // Local minutes from this date's midnight for a timestamptz column.
@@ -165,14 +161,17 @@ export async function setBookingStatus(
   const site = await getSite(sql, siteSlug);
   try {
     await sql.begin(async (tx) => {
-      const [b] = await tx<{ status: DiaryStatus; startsAt: Date; durationMinutes: number }[]>`
-        select status::text as status, starts_at as "startsAt", duration_minutes as "durationMinutes"
+      const [b] = await tx<{ status: DiaryStatus; startsAt: Date; durationMinutes: number; bookedMinutes: number }[]>`
+        select status::text as status, starts_at as "startsAt", duration_minutes as "durationMinutes",
+               booked_duration_minutes as "bookedMinutes"
         from bookings where id = ${bookingId} and venue_id = ${site.id} for update`;
       if (!b) throw new StatusError("not_found", "Booking not found");
       if (!allowedTransitions(b.status).includes(to)) {
         throw new StatusError("not_allowed", `Can't change a ${b.status} booking to ${to}`);
       }
       let duration = b.durationMinutes;
+      // Undoing a finish puts the table back on hold for the planned time.
+      if (b.status === "completed" && to !== "completed") duration = Math.max(duration, b.bookedMinutes);
       if (to === "completed") {
         const elapsed = Math.ceil((now.getTime() - b.startsAt.getTime()) / 60_000);
         if (elapsed > 0 && elapsed < duration) duration = elapsed;

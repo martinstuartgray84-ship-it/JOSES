@@ -424,7 +424,7 @@ export default function MarketingView(props: {
           </button>
         </div>
         <p className="muted small">
-          These run by themselves every hour once switched on (see README: <code>/api/cron/automations</code>). Nobody gets the same automation twice for the same occasion, and nobody gets more than one marketing email a week from them.
+          These run by themselves every hour once switched on (see README: <code>/api/cron/hourly</code>). Nobody gets the same automation twice for the same occasion, and nobody gets more than one marketing email a week from them.
         </p>
         <div className="autos">
           {props.automations.map((a) => (

@@ -31,6 +31,26 @@ export function checkStaffPassword(attempt: string): boolean {
   return safeEqual(h(attempt), h(expected));
 }
 
+// --- Sign-in rate limit: the shared password is one secret for the whole team.
+// One address is blocked after repeated failures. Across all addresses we only
+// slow down (never block), so an attacker can't lock the team out mid-service.
+
+export const LOGIN_LIMITS = { windowMinutes: 15, perIp: 10, globalSlowdown: 50 };
+
+export async function loginBlocked(sql: import("postgres").Sql, ip: string, now = new Date()): Promise<{ blocked: boolean; slow: boolean }> {
+  const since = new Date(now.getTime() - LOGIN_LIMITS.windowMinutes * 60_000);
+  const [r] = await sql`
+    select count(*) filter (where ip = ${ip})::int as ip_n, count(*)::int as all_n
+    from staff_login_failures where at > ${since}`;
+  return { blocked: r!.ip_n >= LOGIN_LIMITS.perIp, slow: r!.all_n >= LOGIN_LIMITS.globalSlowdown };
+}
+
+export async function recordLoginFailure(sql: import("postgres").Sql, ip: string, now = new Date()) {
+  await sql`insert into staff_login_failures (ip, at) values (${ip}, ${now})`;
+  // Keep the table small.
+  await sql`delete from staff_login_failures where at < ${new Date(now.getTime() - 24 * 3_600_000)}`;
+}
+
 export function makeSessionValue(now = Date.now()): string {
   const payload = `v1.${Math.floor(now / 1000) + TTL_SECONDS}`;
   return `${payload}.${sign(payload)}`;

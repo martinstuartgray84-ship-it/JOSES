@@ -72,3 +72,43 @@ export function renderEmail(input: {
   const text = `${paragraphs.join("\n\n").replace(/\*\*(.+?)\*\*/g, "$1")}\n\n--\n${input.footer}\nUnsubscribe: ${input.unsubscribeUrl}\n`;
   return { subject, html, text };
 }
+
+/**
+ * Transactional email (booking confirmations and reminders): no marketing
+ * footer, an optional button, every value escaped.
+ */
+export function renderTransactional(input: {
+  subject: string;
+  heading: string;
+  lines: string[];
+  details: [string, string][];
+  button?: { label: string; url: string };
+  footer: string;
+}): RenderedEmail {
+  const rows = input.details
+    .map(([k, v]) => `<tr><td style="padding:4px 16px 4px 0;color:#6b635a">${escapeHtml(k)}</td><td style="padding:4px 0;font-weight:600">${escapeHtml(v)}</td></tr>`)
+    .join("");
+  const button = input.button
+    ? `<p style="margin:20px 0 0"><a href="${escapeHtml(input.button.url)}" style="display:inline-block;background:#8c2f1b;color:#fff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:600">${escapeHtml(input.button.label)}</a></p>`
+    : "";
+  const html =
+    `<!doctype html><html><body style="margin:0;padding:24px;background:#f7f4ef;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1f1b16">` +
+    `<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;padding:28px;font-size:16px;line-height:1.5">` +
+    `<h1 style="margin:0 0 12px;font-size:22px">${escapeHtml(input.heading)}</h1>` +
+    input.lines.map((l) => `<p style="margin:0 0 12px">${escapeHtml(l)}</p>`).join("") +
+    `<table style="border-collapse:collapse;margin:8px 0 0">${rows}</table>${button}</div>` +
+    `<p style="max-width:520px;margin:16px auto 0;font-size:12px;color:#6b635a;text-align:center">${escapeHtml(input.footer)}</p>` +
+    `</body></html>`;
+  const text = [
+    input.heading,
+    "",
+    ...input.lines,
+    "",
+    ...input.details.map(([k, v]) => `${k}: ${v}`),
+    ...(input.button ? ["", `${input.button.label}: ${input.button.url}`] : []),
+    "",
+    "--",
+    input.footer,
+  ].join("\n");
+  return { subject: input.subject.replace(/[\r\n]+/g, " ").trim(), html, text };
+}

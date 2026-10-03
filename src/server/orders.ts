@@ -384,6 +384,8 @@ export async function addItem(sql: Sql, site: Site, orderId: string, input: AddI
     if (!item) throw new OrderError("not_found", "Item not on the menu");
     if (!item.available) throw new OrderError("unavailable", `${item.name} is off (86)`);
     if (item.stockRemaining !== null) {
+      // Two tills adding the last portion: take turns per item and site.
+      await tx`select pg_advisory_xact_lock(hashtextextended(${`stock:${site.id}:${item.id}`}, 0))`;
       const [{ pending }] = (await tx`
         select coalesce(sum(quantity), 0)::int as pending from order_items i join orders o on o.id = i.order_id
         where o.venue_id = ${site.id} and o.status = 'open' and i.menu_item_id = ${item.id} and i.status = 'held'`) as unknown as [{ pending: number }];
@@ -435,8 +437,16 @@ export async function updateHeldItem(
       if (!Number.isInteger(patch.quantity) || patch.quantity < 1 || patch.quantity > 99) throw new OrderError("invalid", "Quantity must be 1-99");
       set.quantity = patch.quantity;
     }
-    if (patch.seat !== undefined) set.seat = patch.seat;
-    if (patch.course !== undefined) set.course = patch.course;
+    if (patch.seat !== undefined) {
+      if (patch.seat !== null && (!Number.isInteger(patch.seat) || patch.seat < 1 || patch.seat > 100)) {
+        throw new OrderError("invalid", "Seat must be a positive number");
+      }
+      set.seat = patch.seat;
+    }
+    if (patch.course !== undefined) {
+      if (!Number.isInteger(patch.course) || patch.course < 0 || patch.course > 9) throw new OrderError("invalid", "Course must be 0-9");
+      set.course = patch.course;
+    }
     if (patch.notes !== undefined) set.notes = patch.notes?.trim() || null;
     if (Object.keys(set).length) await tx`update order_items set ${tx(set)} where id = ${itemId}`;
   });
@@ -574,13 +584,16 @@ export async function takePayment(
     if (input.method !== "cash" && input.amount > before.totals.balance) {
       throw new OrderError("invalid", "That's more than is owed. Put the extra on as a tip.");
     }
+    // Record what went towards the bill; anything over is change handed back.
+    const applied = Math.min(input.amount, Math.max(0, before.totals.balance));
+    const change = input.amount - applied;
     await tx`insert into order_payments (order_id, venue_id, method, amount, tip, taken_by, reference, created_at)
-             values (${orderId}, ${site.id}, ${input.method}, ${input.amount}, ${tip}, ${input.staffId ?? null},
+             values (${orderId}, ${site.id}, ${input.method}, ${applied}, ${tip}, ${input.staffId ?? null},
                      ${input.reference ?? null}, ${now})`;
     const after = await getOrder(tx, orderId);
     const closed = after.totals.balance <= 0;
     if (closed) await closeOrder(tx, after, now);
-    return { closed, balance: Math.max(0, after.totals.balance), change: Math.max(0, -after.totals.balance) };
+    return { closed, balance: Math.max(0, after.totals.balance), change };
   });
 }
 

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createBookingBody, firstIssue, type BookingCreatedResponse } from "@/src/lib/api";
 import { db } from "@/src/server/db";
 import { BookingError, createBooking } from "@/src/server/booking";
+import { trySendBookingEmail } from "@/src/server/notify";
 
 const STATUS: Record<BookingError["code"], number> = {
   unknown_site: 404,
@@ -27,6 +28,8 @@ export async function POST(req: NextRequest) {
       specialRequests: b.specialRequests,
       channel: "online",
     });
+    // After commit: an email problem must never undo a booking.
+    await trySendBookingEmail(db(), booking.id, "confirmation");
     const body: BookingCreatedResponse = { manageToken: booking.manageToken, startsAt: booking.startsAt.toISOString() };
     return NextResponse.json(body, { status: 201 });
   } catch (err) {

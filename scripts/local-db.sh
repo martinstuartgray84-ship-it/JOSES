@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # A persistent local Postgres for running the app without Supabase.
-#   scripts/local-db.sh start   # create (first time) and start on :54322, with schema + seed
+#   scripts/local-db.sh start   # create (first time) and start on :54322, with schema + seed;
+#                               # on later starts, applies any new migrations
 #   scripts/local-db.sh stop
 #   scripts/local-db.sh reset   # wipe and recreate
 # Then: DATABASE_URL=postgres://postgres@localhost:54322/postgres npm run dev
@@ -29,7 +30,22 @@ start() {
   "${RUN_AS[@]}" "$PG_CTL" -D "$DATA" -l "$DATA/server.log" -o "-p $PORT -k /tmp -c listen_addresses=localhost" -w start >/dev/null
   if [ "$fresh" = 1 ]; then
     "${PSQL[@]}" -f supabase/tests/supabase_stub.sql
-    for f in supabase/migrations/*.sql; do "${PSQL[@]}" -f "$f"; done
+    "${PSQL[@]}" -c "create table _local_migrations (name text primary key, applied_at timestamptz default now())"
+  fi
+  if [ -z "$("${PSQL[@]}" -tAc "select to_regclass('_local_migrations')")" ]; then
+    echo "This local database predates migration tracking. Run: npm run db:reset" >&2
+    exit 1
+  fi
+  # Apply any migrations this database hasn't seen yet.
+  for f in supabase/migrations/*.sql; do
+    name=$(basename "$f")
+    if [ -z "$("${PSQL[@]}" -tAc "select 1 from _local_migrations where name = '$name'")" ]; then
+      echo "applying $name"
+      "${PSQL[@]}" -f "$f"
+      "${PSQL[@]}" -c "insert into _local_migrations (name) values ('$name')"
+    fi
+  done
+  if [ "$fresh" = 1 ]; then
     "${PSQL[@]}" -f supabase/seed.sql
   fi
   echo "DATABASE_URL=postgres://postgres@localhost:$PORT/postgres"

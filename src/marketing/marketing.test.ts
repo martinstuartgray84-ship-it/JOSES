@@ -53,3 +53,22 @@ describe("templates", () => {
     expect(e.text).toContain("Unsubscribe: https://app/u/tok");
   });
 });
+
+describe("transactional emails", async () => {
+  const { renderTransactional } = await import("./template");
+  it("escapes guest data and includes details and the button", () => {
+    const e = renderTransactional({
+      subject: "Booking confirmed",
+      heading: "See you Friday, <Ana>",
+      lines: ["Line one"],
+      details: [["Time", "19:30"], ["Notes", "<b>nuts</b>"]],
+      button: { label: "Manage booking", url: "https://x/manage/abc" },
+      footer: "Jose's Site One",
+    });
+    expect(e.html).toContain("See you Friday, &lt;Ana&gt;");
+    expect(e.html).toContain("&lt;b&gt;nuts&lt;/b&gt;");
+    expect(e.html).toContain('href="https://x/manage/abc"');
+    expect(e.text).toContain("Time: 19:30");
+    expect(e.text).toContain("Manage booking: https://x/manage/abc");
+  });
+});

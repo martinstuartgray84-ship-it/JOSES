@@ -117,18 +117,49 @@ async function deliverQueued(sql: Sql, companyId: string, recipientIds: string[]
  * Recipients are written first (one per guest), then delivered.
  */
 export async function sendCampaign(sql: Sql, companyId: string, campaignId: string, now = new Date()) {
-  const [c] = await sql`update campaigns set status = 'sending' where id = ${campaignId} and company_id = ${companyId} and status = 'draft' returning *`;
+  // A campaign left in "sending" (e.g. the server stopped mid-send) can be sent
+  // again: recipients are written once, and only queued ones are delivered.
+  const [c] = await sql`update campaigns set status = 'sending' where id = ${campaignId} and company_id = ${companyId}
+                        and status in ('draft', 'sending') returning *`;
   if (!c) throw new Error("That campaign has already been sent");
   const segment = parseSegment(c.segment);
-  const ids = await sql`
-    insert into campaign_recipients (campaign_id, guest_id, email)
-    select ${campaignId}, gs.id, gs.email from ${guestStatsFrom(sql, companyId)}
-    where ${segmentWhere(sql, segment, now)} and gs.mailable
-    on conflict do nothing
-    returning id`;
-  const counts = await deliverQueued(sql, companyId, ids.map((r) => r.id), () => ({ subject: c.subject, body: c.body }));
-  await sql`update campaigns set status = 'sent', sent_at = ${now} where id = ${campaignId}`;
-  return { recipients: ids.length, ...counts };
+  if (!c.sent_at) {
+    await sql`
+      insert into campaign_recipients (campaign_id, guest_id, email)
+      select ${campaignId}, gs.id, gs.email from ${guestStatsFrom(sql, companyId)}
+      where ${segmentWhere(sql, segment, now)} and gs.mailable
+      on conflict do nothing`;
+    // Fix the audience: a resumed send doesn't pick up guests who joined since.
+    await sql`update campaigns set sent_at = ${now} where id = ${campaignId}`;
+  }
+  const queued = await sql`select id from campaign_recipients where campaign_id = ${campaignId} and status = 'queued'`;
+  const counts = await deliverQueued(sql, companyId, queued.map((r) => r.id), () => ({ subject: c.subject, body: c.body }));
+  await sql`update campaigns set status = 'sent' where id = ${campaignId}`;
+  const [{ n }] = (await sql`select count(*)::int as n from campaign_recipients where campaign_id = ${campaignId}`) as unknown as [{ n: number }];
+  return { recipients: n, ...counts };
+}
+
+/**
+ * Retry marketing emails that failed or were left queued (e.g. a crash mid-send).
+ * Run hourly; gives up on anything older than two days.
+ */
+export async function retryRecipients(sql: Sql, companyId: string, now = new Date()) {
+  const rows = await sql`
+    update campaign_recipients r set status = 'queued', error = null
+    from guests g
+    where g.id = r.guest_id and g.company_id = ${companyId}
+      and (r.status = 'failed' or (r.status = 'queued' and r.created_at < ${new Date(now.getTime() - 15 * 60_000)}))
+      and r.created_at > ${new Date(now.getTime() - 2 * 86_400_000)}
+      and g.marketing_opt_in and g.unsubscribed_at is null
+    returning r.id, r.campaign_id, r.automation_id`;
+  if (!rows.length) return { retried: 0, sent: 0, failed: 0, logged: 0 };
+  const copies = new Map<string, { subject: string; body: string }>();
+  const campaignIds = [...new Set(rows.map((r) => r.campaign_id as string | null).filter((x): x is string => !!x))];
+  const automationIds = [...new Set(rows.map((r) => r.automation_id as string | null).filter((x): x is string => !!x))];
+  if (campaignIds.length) for (const c of await sql`select id, subject, body from campaigns where id in ${sql(campaignIds)}`) copies.set(c.id, { subject: c.subject, body: c.body });
+  if (automationIds.length) for (const a of await sql`select id, subject, body from automations where id in ${sql(automationIds)}`) copies.set(a.id, { subject: a.subject, body: a.body });
+  const counts = await deliverQueued(sql, companyId, rows.map((r) => r.id), (r) => copies.get((r.campaign_id ?? r.automation_id)!)!);
+  return { retried: rows.length, ...counts };
 }
 
 /** Send a single test to an address (doesn't touch stats). */
@@ -323,15 +354,18 @@ async function due(sql: Sql, companyId: string, a: AutomationView, now: Date): P
   }
   // Birthday: within the next N days (month/day, ignoring year), once per year.
   const days = a.params.daysBefore!;
-  const targets: { m: number; d: number }[] = [];
+  // Key on the year of the birthday itself, so a 2 January birthday emailed in
+  // late December isn't emailed again once January arrives.
+  const targets: { m: number; d: number; y: number }[] = [];
   for (let i = 0; i <= days; i++) {
     const t = new Date(now.getTime() + i * 86_400_000);
-    targets.push({ m: t.getUTCMonth() + 1, d: t.getUTCDate() });
+    targets.push({ m: t.getUTCMonth() + 1, d: t.getUTCDate(), y: t.getUTCFullYear() });
   }
   const rows = await sql`select gs.id, gs.email, gs.birthday_month, gs.birthday_day ${base} and gs.birthday_month is not null`;
-  return rows
-    .filter((r) => targets.some((t) => t.m === r.birthday_month && t.d === r.birthday_day))
-    .map((r) => ({ guestId: r.id, email: r.email, occasion: `birthday:${now.getUTCFullYear()}` }));
+  return rows.flatMap((r) => {
+    const hit = targets.find((t) => t.m === r.birthday_month && t.d === r.birthday_day);
+    return hit ? [{ guestId: r.id as string, email: r.email as string, occasion: `birthday:${hit.y}` }] : [];
+  });
 }
 
 /** Run every enabled automation once. Safe to call repeatedly: occasions never repeat. */

@@ -8,7 +8,7 @@ It's built for one company running two sites. Each site has its own floor plan, 
 |---|---|---|
 | Booking widget | `/book` | Guests book online; embeddable per site |
 | Manage booking | `/manage/<token>` | Guest's private link to view or cancel |
-| Diary | `/diary/<site>` | Timeline and floor plan of the day's bookings; seat, finish, no-show |
+| Diary | `/diary/<site>` | Timeline and floor plan of the day's bookings; seat, finish, no-show; walk-ins and phone bookings |
 | Till | `/pos/<site>` | PIN sign-in, tables, checks, seats, courses, send/fire, voids, comps, discounts, split payments |
 | Kitchen & bar | `/kds/<site>/<station>` | Station screens with cook-to-sync sequencing, timers, all-day counts, bump and recall; the pass |
 | Menu | `/menu/<site>` | Edit items, prices, GP%, allergens, routing, prep times; 86 and stock per site; spreadsheet import |
@@ -94,13 +94,22 @@ npm run dev        # http://localhost:3000/book (guests) and /diary (staff)
 - **Timing.** Every item records ordered, sent, started, ready and served, which is what the dashboard's service-speed numbers come from.
 - **Stock.** Set a portion count on an item and it counts down as items are sent, 86ing itself at zero.
 
+## Booking emails
+
+Guests get a confirmation when they book (online or by phone), a reminder about a day before, and a note if the booking is cancelled. These are service messages, so they don't need marketing consent. Each is sent at most once per booking. Failed sends are retried for up to two days.
+
+## Hourly job
+
+Call `GET /api/cron/hourly` with `Authorization: Bearer $CRON_SECRET` once an hour (Vercel Cron, Supabase `pg_cron` + `pg_net`, or any scheduler). It sends day-before reminders, runs marketing automations and retries failed emails. Running it more often is safe: nothing is ever sent twice.
+
 ## Marketing
 
 - Only guests who opted in, haven't unsubscribed and have an email are ever messaged. Each opt-in records when and how it was given.
 - Every email has a one-click unsubscribe (`List-Unsubscribe` headers and `/u/<token>`).
 - Delivery uses [Resend](https://resend.com) when `RESEND_API_KEY` and `EMAIL_FROM` are set. Without them, sends are recorded as "logged" and nothing is delivered.
 - Results lead with **came back**: recipients with a paid visit within 30 days. Opens are tracked with a pixel but are only a rough guide.
-- Automations run when something calls `GET /api/cron/automations` with `Authorization: Bearer $CRON_SECRET`; hourly is ideal. Each guest gets an automation at most once per occasion, and at most one automated email a week.
+- Automations run from the hourly job. Each guest gets an automation at most once per occasion, and at most one automated email a week.
+- A guest who unsubscribed can't be opted back in from the public booking form; staff can re-add them from the profile, with a note of how they agreed. Public bookings fill in missing guest details but never overwrite existing ones.
 
 ## Host diary
 
@@ -110,12 +119,13 @@ npm run dev        # http://localhost:3000/book (guests) and /diary (staff)
 - **Timeline**: one row per table, time across the top. Each booking is a block coloured by status, followed by its reset time. A red line marks now. The arrivals strip shows covers arriving per 15 minutes, so the busy points stand out. Blocked tables (e.g. "Wobbly leg") show hatched.
 - **Floor**: every table's state at the time on the slider. The states are seated (with when it's due to finish), running over, booked and due, late, free with the next booking, or blocked. Seated guests keep the table until someone finishes it, even past their booked time.
 - **Booking panel**: tap any booking to see the guest's phone, notes, history across both sites (★ regular, ! previous no-show) and the actions for its status.
-- **Actions**: seat, finish (frees the table now), back to booked, no-show, or cancel. Reinstating a cancelled booking is refused if its table has been rebooked since.
+- **Actions**: seat, finish (frees the table now), back to booked, no-show, or cancel. Undoing a finish puts the table back on hold for its planned time. Reinstating a cancelled booking is refused if its table has been rebooked since.
+- **New booking**: *Walk-in now* seats a party immediately at the best free table, or one you choose. It uses the same fit and overlap rules as online bookings. *Booking* takes a phone booking at any free time, with a confirmation email if you add their email.
 - Refreshes every 30 seconds while open, so online bookings appear without reloading.
 
 Tables without a saved floor position (`pos_x` as % across the room, `pos_y` in pixels) are laid out in a grid per area.
 
-**Staff access is interim:** one shared `STAFF_PASSWORD`, swapped for a signed, HttpOnly session cookie (`STAFF_SESSION_SECRET`). The diary stays locked if either is unset. It's checked on every page and every action. Before go-live, replace it with Supabase Auth so each person has their own login and their role from `company_members` / `venue_members` applies.
+**Staff access is interim:** one shared `STAFF_PASSWORD`, swapped for a signed, HttpOnly session cookie (`STAFF_SESSION_SECRET`). The diary stays locked if either is unset. Ten wrong passwords from one address in 15 minutes blocks that address. Many failures across all addresses slow every attempt down rather than locking the team out. It's checked on every page and every action. Before go-live, replace it with Supabase Auth so each person has their own login and their role from `company_members` / `venue_members` applies.
 
 ## Embedding on your websites
 
@@ -147,4 +157,5 @@ npm run test:db    # throwaway Postgres 15+: migrations, seed, SQL tests, then b
 5. ~~Menu, till, kitchen and bar screens~~
 6. ~~Owner dashboard~~
 7. ~~Guest CRM and marketing~~
-8. Next: booking confirmation and reminder emails; walk-ins and phone bookings from the diary; per-person logins (Supabase Auth); settings screens for services, tables and stations; card terminals (Stripe Terminal or Dojo); deposits and card holds; receipt printing; realtime instead of polling
+8. ~~Booking emails, walk-ins and phone bookings~~
+9. Next: per-person logins (Supabase Auth); settings screens for services, tables and stations; card terminals (Stripe Terminal or Dojo); deposits and card holds; receipt printing; realtime instead of polling

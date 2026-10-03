@@ -13,6 +13,7 @@ import {
   type DiaryStatus,
 } from "@/src/lib/diary-shared";
 import { signOut, updateStatus } from "../actions";
+import NewBooking from "./NewBooking";
 
 const PX_PER_MIN = 1.6;
 const REFRESH_MS = 30_000;
@@ -53,6 +54,8 @@ export default function DiaryView({
   const [view, setView] = useState<View>("timeline");
   const [showCancelled, setShowCancelled] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [flash, setFlash] = useState<string | null>(null);
   const { date, site } = diary;
 
   // Keep the diary fresh: online bookings land while the host is looking at it.
@@ -111,6 +114,11 @@ export default function DiaryView({
           />
         </div>
         <div className="dtools">
+          {date >= today && (
+            <button type="button" className="primary" onClick={() => setAdding(true)}>
+              + New booking
+            </button>
+          )}
           <div className="seg" role="tablist" aria-label="View">
             <button role="tab" aria-selected={view === "timeline"} onClick={() => setView("timeline")}>
               Timeline
@@ -131,6 +139,11 @@ export default function DiaryView({
         </div>
       </header>
 
+      {flash && (
+        <p className="flash" role="status" style={{ margin: 0 }}>
+          {flash}
+        </p>
+      )}
       <Summary diary={diary} />
 
       {diary.services.length === 0 && diary.bookings.length === 0 ? (
@@ -152,6 +165,22 @@ export default function DiaryView({
           nowMinutes={nowMinutes}
           selectedId={selectedId}
           onSelect={setSelectedId}
+        />
+      )}
+
+      {adding && (
+        <NewBooking
+          siteSlug={site.slug}
+          date={date}
+          today={today}
+          tables={diary.tables.map((t) => ({ id: t.id, label: t.label, maxCovers: t.maxCovers }))}
+          onClose={() => setAdding(false)}
+          onDone={(m) => {
+            setAdding(false);
+            setFlash(m);
+            setTimeout(() => setFlash(null), 3000);
+            router.refresh();
+          }}
         />
       )}
 

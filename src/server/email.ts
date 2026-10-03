@@ -6,8 +6,8 @@ export interface OutgoingEmail {
   subject: string;
   html: string;
   text: string;
-  /** RFC 8058 one-click unsubscribe endpoint. */
-  unsubscribeUrl: string;
+  /** RFC 8058 one-click unsubscribe endpoint (marketing only). */
+  unsubscribeUrl?: string;
 }
 
 export interface DeliveryResult {
@@ -42,10 +42,14 @@ export async function deliver(messages: OutgoingEmail[]): Promise<DeliveryResult
             subject: m.subject,
             html: m.html,
             text: m.text,
-            headers: {
-              "List-Unsubscribe": `<${m.unsubscribeUrl}>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
+            ...(m.unsubscribeUrl
+              ? {
+                  headers: {
+                    "List-Unsubscribe": `<${m.unsubscribeUrl}>`,
+                    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                  },
+                }
+              : {}),
           })),
         ),
       });

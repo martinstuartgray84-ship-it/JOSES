@@ -14,7 +14,11 @@ export class NotSignedIn extends Error {}
 
 export async function staffSite(slug: string): Promise<Site> {
   if (!(await isStaff())) throw new NotSignedIn("Your session has expired. Please sign in again.");
-  return getSite(db(), slug);
+  const site = await getSite(db(), slug);
+  // Staff manage one company's sites; never another company's in the same database.
+  const company = await staffCompany();
+  if (site.companyId !== company.id) throw new BookingError("unknown_site", `No site called ${slug}`);
+  return site;
 }
 
 export async function requireStaffAction(): Promise<void> {

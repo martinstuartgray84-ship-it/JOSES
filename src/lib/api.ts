@@ -1,7 +1,13 @@
 // Shapes shared by the API routes and the booking widget.
 import { z } from "zod";
 
-export const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD");
+export const isoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
+  .refine((d) => {
+    const t = Date.parse(`${d}T00:00:00Z`);
+    return !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === d;
+  }, "That date doesn't exist");
 
 export const availabilityQuery = z.object({
   site: z.string().min(1),

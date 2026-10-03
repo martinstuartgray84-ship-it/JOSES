@@ -134,3 +134,13 @@
   .dsites a { white-space: nowrap; }
   :root { --label: 84px; }
 }
+
+.new-booking { width: min(560px, 100%); }
+.new-booking .seg { justify-self: start; }
+.lbl { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; }
+.covers-row, .time-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.covers-row button { width: 40px; height: 40px; padding: 0; font-weight: 700; }
+.time-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); max-height: 180px; overflow-y: auto; }
+.time-grid button { padding: 8px 0; font-variant-numeric: tabular-nums; font-weight: 600; }
+.covers-row button.on, .time-grid button.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.flash { color: var(--st-seated); font-weight: 600; }

@@ -48,12 +48,12 @@ export async function getBookingByToken(sql: Sql, token: string, now = new Date(
   return row ?? null;
 }
 
-/** Returns false if the token is unknown or the booking can no longer be cancelled. */
-export async function cancelBookingByToken(sql: Sql, token: string, now = new Date()): Promise<boolean> {
-  if (!TOKEN_RE.test(token)) return false;
+/** The cancelled booking's id, or null if the token is unknown or it can no longer be cancelled. */
+export async function cancelBookingByToken(sql: Sql, token: string, now = new Date()): Promise<string | null> {
+  if (!TOKEN_RE.test(token)) return null;
   const rows = await sql`
     update bookings set status = 'cancelled'
     where manage_token = ${token} and status in ('pending', 'confirmed') and starts_at > ${now}
     returning id`;
-  return rows.length === 1;
+  return rows.length === 1 ? (rows[0]!.id as string) : null;
 }

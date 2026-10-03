@@ -2,7 +2,8 @@
 // pointing at a throwaway Postgres with the migrations applied.
 import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { BookingError, createBooking, siteAvailability } from "./booking";
+import { BookingError, createBooking, createWalkIn, localParts, siteAvailability } from "./booking";
+import { sendBookingEmail, sendDueReminders } from "./notify";
 import { cancelBookingByToken, getBookingByToken, listSites } from "./manage";
 import { loadDiary, setBookingStatus, StatusError } from "./diary";
 
@@ -153,8 +154,8 @@ describe.skipIf(!url)("booking service", () => {
     const booking = await book(b, hm(19), { specialRequests: "Window please" });
     const view = await getBookingByToken(sql, booking.manageToken, now);
     expect(view).toMatchObject({ siteSlug: b.slug, covers: 2, status: "confirmed", cancellable: true, firstName: "Ana" });
-    expect(await cancelBookingByToken(sql, booking.manageToken, now)).toBe(true);
-    expect(await cancelBookingByToken(sql, booking.manageToken, now)).toBe(false);
+    expect(await cancelBookingByToken(sql, booking.manageToken, now)).toBe(booking.id);
+    expect(await cancelBookingByToken(sql, booking.manageToken, now)).toBeNull();
     expect((await getBookingByToken(sql, booking.manageToken, now))?.cancellable).toBe(false);
     await expect(book(b, hm(19))).resolves.toBeTruthy();
   });
@@ -162,8 +163,8 @@ describe.skipIf(!url)("booking service", () => {
   it("won't cancel after the booking time or with a malformed token", async () => {
     const { b } = await company();
     const booking = await book(b, hm(19));
-    expect(await cancelBookingByToken(sql, booking.manageToken, new Date("2026-10-09T19:00:00Z"))).toBe(false);
-    expect(await cancelBookingByToken(sql, "' or 1=1 --", now)).toBe(false);
+    expect(await cancelBookingByToken(sql, booking.manageToken, new Date("2026-10-09T19:00:00Z"))).toBeNull();
+    expect(await cancelBookingByToken(sql, "' or 1=1 --", now)).toBeNull();
     expect(await getBookingByToken(sql, "nope", now)).toBeNull();
   });
 
@@ -213,5 +214,58 @@ describe.skipIf(!url)("booking service", () => {
     const err = await setBookingStatus(sql, b.slug, x.id, "confirmed").catch((e) => e);
     expect(err).toBeInstanceOf(StatusError);
     expect(err.code).toBe("table_taken");
+  });
+
+  it("seats a walk-in now at the best free table, or a chosen one", async () => {
+    const { a } = await company();
+    const at = new Date("2026-10-09T18:10:00Z"); // 19:10 local
+    // Book table 1 from 19:00 so the walk-in has to go elsewhere.
+    await book(a, hm(19), { guest: { firstName: "Bo", email: "bo@example.com" } });
+    const w = await createWalkIn(sql, { siteSlug: a.slug, covers: 2, now: at });
+    const [row] = await sql`select status, channel, starts_at, guest_id from bookings where id = ${w.id}`;
+    expect(row).toMatchObject({ status: "seated", channel: "walk_in", guest_id: null });
+    expect((row!.starts_at as Date).toISOString()).toBe(at.toISOString());
+    expect(w.tableIds).toHaveLength(1);
+    // Chosen table that's taken is refused; a free one works and records the guest.
+    await expect(createWalkIn(sql, { siteSlug: a.slug, covers: 2, tableId: w.tableIds[0], now: at })).rejects.toThrow("taken or too small");
+    const t3 = a.tableIds[2]!;
+    const w2 = await createWalkIn(sql, { siteSlug: a.slug, covers: 3, tableId: t3, guest: { firstName: "Cy", phone: "07700 900999" }, now: at });
+    expect(w2.tableIds).toEqual([t3]);
+    expect(w2.guestId).not.toBe("");
+    // Nothing left for a party of 2 now.
+    await expect(createWalkIn(sql, { siteSlug: a.slug, covers: 2, now: at })).rejects.toThrow("No free table");
+  });
+
+  it("works out local date and time across the clocks going back", () => {
+    expect(localParts(new Date("2026-10-25T00:30:00Z"), "Europe/London")).toMatchObject({ date: "2026-10-25", minutes: 90 }); // 01:30 BST
+    expect(localParts(new Date("2026-10-25T01:30:00Z"), "Europe/London")).toMatchObject({ date: "2026-10-25", minutes: 90 }); // 01:30 GMT
+    expect(localParts(new Date("2026-10-24T23:30:00Z"), "Europe/London")).toMatchObject({ date: "2026-10-25", minutes: 30, dow: 0 });
+  });
+
+  it("emails a confirmation once, reminds the day before, and confirms cancellations", async () => {
+    const { b } = await company();
+    const created = new Date("2026-10-01T09:00:00Z");
+    const x = await book(b, hm(19), { guest: { firstName: "Ana", email: "ana@example.com" } });
+    await sql`update bookings set created_at = ${created} where id = ${x.id}`;
+    expect(await sendBookingEmail(sql, x.id, "confirmation")).toBe("logged");
+    expect(await sendBookingEmail(sql, x.id, "confirmation")).toBe("skipped");
+    // 19:00 local on the 9th = 18:00Z; reminders go 20–28 hours ahead.
+    // The reminder job covers every site, so check this booking's own messages.
+    const reminded = async () =>
+      (await sql`select count(*)::int as n from booking_messages where booking_id = ${x.id} and kind = 'reminder'`)[0]!.n;
+    await sendDueReminders(sql, new Date("2026-10-08T12:00:00Z")); // 30h ahead: too early
+    expect(await reminded()).toBe(0);
+    await sendDueReminders(sql, new Date("2026-10-08T17:00:00Z")); // 25h ahead
+    expect(await reminded()).toBe(1);
+    await sendDueReminders(sql, new Date("2026-10-08T18:00:00Z"));
+    expect(await reminded()).toBe(1);
+    await sql`update bookings set status = 'cancelled' where id = ${x.id}`;
+    expect(await sendBookingEmail(sql, x.id, "cancellation")).toBe("logged");
+    const kinds = await sql`select kind::text as kind, status::text as status from booking_messages where booking_id = ${x.id} order by kind`;
+    expect(kinds).toEqual([
+      { kind: "cancellation", status: "logged" },
+      { kind: "confirmation", status: "logged" },
+      { kind: "reminder", status: "logged" },
+    ]);
   });
 });
