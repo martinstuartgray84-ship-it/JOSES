@@ -2,9 +2,14 @@
 \set QUIET on
 begin;
 
-insert into venues (id, name, slug) values
-  ('00000000-0000-0000-0000-00000000000a', 'Jose''s', 'joses'),
-  ('00000000-0000-0000-0000-00000000000b', 'Other', 'other');
+-- One company with two sites (A, B), plus an unrelated company with site Z.
+insert into companies (id, name, slug) values
+  ('00000000-0000-0000-0000-0000000000f1', 'Jose''s', 'joses'),
+  ('00000000-0000-0000-0000-0000000000f2', 'Elsewhere', 'elsewhere');
+insert into venues (id, company_id, name, slug) values
+  ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-0000000000f1', 'Jose''s Site A', 'joses-a'),
+  ('00000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-0000000000f1', 'Jose''s Site B', 'joses-b'),
+  ('00000000-0000-0000-0000-0000000000ee', '00000000-0000-0000-0000-0000000000f2', 'Other', 'other');
 insert into areas (id, venue_id, name) values
   ('00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-00000000000a', 'Main'),
   ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-00000000000b', 'Main');
@@ -60,16 +65,57 @@ do $$ begin
   end if;
 end $$;
 
--- RLS: a host at venue A sees A's bookings only and can't edit services.
+-- Shared guest list: one guest books at both sites.
+insert into guests (id, company_id, first_name, email) values
+  ('30000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000f1', 'Ana', 'ana@example.com'),
+  ('30000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-0000000000f2', 'Ben', 'ben@example.com');
+insert into services (id, venue_id, name, days_of_week, first_seating, last_seating) values
+  ('00000000-0000-0000-0000-0000000000c2', '00000000-0000-0000-0000-00000000000b', 'Dinner', '{5}', 1020, 1260);
+update bookings set guest_id = '30000000-0000-0000-0000-000000000001', status = 'completed'
+  where id = '10000000-0000-0000-0000-000000000004';
+insert into bookings (id, venue_id, service_id, guest_id, covers, starts_at, duration_minutes, status) values
+  ('10000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-0000000000c2',
+   '30000000-0000-0000-0000-000000000001', 2, '2026-10-02 19:00+01', 90, 'completed');
+-- Same email at the same company is one guest (case-insensitive)...
+select pg_temp.expect_error($$ insert into guests (company_id, first_name, email) values ('00000000-0000-0000-0000-0000000000f1', 'Ana', 'ANA@example.com') $$, '23505');
+-- ...and another company's guest can't be attached to our booking.
+select pg_temp.expect_error($$ update bookings set guest_id = '30000000-0000-0000-0000-000000000002' where id = '10000000-0000-0000-0000-000000000005' $$, 'P0001');
+do $$ begin
+  if (select visits from guest_stats where guest_id = '30000000-0000-0000-0000-000000000001') <> 2
+     or (select sites_visited from guest_stats where guest_id = '30000000-0000-0000-0000-000000000001') <> 2 then
+    raise exception 'guest_stats should show 2 visits across 2 sites';
+  end if;
+end $$;
+
+-- RLS: a host at site A sees A's bookings and the shared guest list, nothing at B or Elsewhere,
+-- and can't edit services.
 insert into venue_members values ('00000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-000000000001', 'host');
 set local role authenticated;
 set local request.jwt.claim.sub = '20000000-0000-0000-0000-000000000001';
 do $$ begin
-  if (select count(*) from bookings) <> 4 then raise exception 'host should see 4 venue A bookings, saw %', (select count(*) from bookings); end if;
-  if exists (select 1 from venues where slug = 'other') then raise exception 'host can see another venue'; end if;
+  if (select count(*) from bookings) <> 4 then raise exception 'host should see 4 site A bookings, saw %', (select count(*) from bookings); end if;
+  if exists (select 1 from venues where slug <> 'joses-a') then raise exception 'site A host can see another site'; end if;
+  if (select count(*) from guests) <> 1 then raise exception 'host should see the 1 company guest'; end if;
   update services set buffer_minutes = 0;
   if found then raise exception 'host should not be able to edit services'; end if;
 end $$;
+reset role;
+
+-- A company-wide manager sees both sites and can edit services at either, but not Elsewhere.
+insert into company_members values ('00000000-0000-0000-0000-0000000000f1', '20000000-0000-0000-0000-000000000002', 'manager');
+set local role authenticated;
+set local request.jwt.claim.sub = '20000000-0000-0000-0000-000000000002';
+do $$ declare n int; begin
+  if (select count(*) from venues) <> 2 then raise exception 'manager should see both sites'; end if;
+  if (select count(*) from bookings) <> 5 then raise exception 'manager should see 5 bookings, saw %', (select count(*) from bookings); end if;
+  update services set buffer_minutes = 10;
+  get diagnostics n = row_count;
+  if n <> 2 then raise exception 'manager should update services at both sites, updated %', n; end if;
+  update company_members set role = 'owner';
+  if found then raise exception 'manager should not be able to promote themselves'; end if;
+end $$;
+reset role;
+set local role authenticated;
 -- Stranger sees nothing.
 set local request.jwt.claim.sub = '20000000-0000-0000-0000-000000000099';
 do $$ begin

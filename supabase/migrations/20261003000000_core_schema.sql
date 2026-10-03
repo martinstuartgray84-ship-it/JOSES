@@ -7,11 +7,21 @@ create extension if not exists btree_gist;
 create extension if not exists pgcrypto;
 
 -- ---------------------------------------------------------------------------
--- Venues and staff access
+-- Company, sites and staff access
+-- One company runs several sites (venues). Guests are shared across the company;
+-- floor plans, services and bookings belong to a site.
 -- ---------------------------------------------------------------------------
+
+create table companies (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text not null unique,
+  created_at timestamptz not null default now()
+);
 
 create table venues (
   id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references companies on delete cascade,
   name text not null,
   slug text not null unique,
   timezone text not null default 'Europe/London',
@@ -22,8 +32,20 @@ create table venues (
   created_at timestamptz not null default now()
 );
 
+create index venues_company on venues (company_id);
+
+-- Enum order matters: owner < manager < host, so "role <= min_role" means "at least min_role".
 create type venue_role as enum ('owner', 'manager', 'host');
 
+-- Company-wide staff: the role applies at every site.
+create table company_members (
+  company_id uuid not null references companies on delete cascade,
+  user_id uuid not null,
+  role venue_role not null default 'host',
+  primary key (company_id, user_id)
+);
+
+-- Site-specific staff, e.g. a host who only works at one site.
 create table venue_members (
   venue_id uuid not null references venues on delete cascade,
   user_id uuid not null,
@@ -37,9 +59,24 @@ language sql stable security definer set search_path = public
 as $$
   select exists (
     select 1 from venue_members m
-    where m.venue_id = v
-      and m.user_id = auth.uid()
-      and m.role <= min_role  -- enum order: owner < manager < host
+    where m.venue_id = v and m.user_id = auth.uid() and m.role <= min_role
+  ) or exists (
+    select 1 from venues ve join company_members cm on cm.company_id = ve.company_id
+    where ve.id = v and cm.user_id = auth.uid() and cm.role <= min_role
+  );
+$$;
+
+-- Anyone who works at any of the company's sites (used for the shared guest list).
+create function is_company_staff(c uuid, min_role venue_role default 'host')
+returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select exists (
+    select 1 from company_members cm
+    where cm.company_id = c and cm.user_id = auth.uid() and cm.role <= min_role
+  ) or exists (
+    select 1 from venue_members m join venues ve on ve.id = m.venue_id
+    where ve.company_id = c and m.user_id = auth.uid() and m.role <= min_role
   );
 $$;
 
@@ -156,12 +193,12 @@ create table payment_rules (
 );
 
 -- ---------------------------------------------------------------------------
--- Guests (per-venue CRM)
+-- Guests (company-wide CRM: one record per person across both sites)
 -- ---------------------------------------------------------------------------
 
 create table guests (
   id uuid primary key default gen_random_uuid(),
-  venue_id uuid not null references venues on delete cascade,
+  company_id uuid not null references companies on delete cascade,
   first_name text not null,
   last_name text,
   email text,
@@ -172,8 +209,8 @@ create table guests (
   stripe_customer_id text,
   created_at timestamptz not null default now()
 );
-create unique index guests_email_per_venue on guests (venue_id, lower(email)) where email is not null;
-create index guests_phone on guests (venue_id, phone);
+create unique index guests_email_per_company on guests (company_id, lower(email)) where email is not null;
+create index guests_phone on guests (company_id, phone);
 
 -- ---------------------------------------------------------------------------
 -- Bookings
@@ -204,6 +241,23 @@ create table bookings (
 );
 create index bookings_venue_time on bookings (venue_id, starts_at);
 create index bookings_guest on bookings (guest_id);
+
+-- A booking's guest must belong to the same company as its site.
+create function bookings_guest_same_company() returns trigger
+language plpgsql as $$
+begin
+  if new.guest_id is not null and not exists (
+    select 1 from guests g join venues v on v.company_id = g.company_id
+    where g.id = new.guest_id and v.id = new.venue_id
+  ) then
+    raise exception 'guest % does not belong to this site''s company', new.guest_id;
+  end if;
+  return new;
+end $$;
+
+create trigger bookings_guest_same_company
+before insert or update of guest_id, venue_id on bookings
+for each row execute function bookings_guest_same_company();
 
 -- Which tables a booking occupies. Denormalises the booking's time range and
 -- status so the exclusion constraint can be checked on this table alone.
@@ -314,6 +368,8 @@ create index payments_booking on payments (booking_id);
 -- routes using the service role, which bypasses RLS.
 -- ---------------------------------------------------------------------------
 
+alter table companies enable row level security;
+alter table company_members enable row level security;
 alter table venues enable row level security;
 alter table venue_members enable row level security;
 alter table areas enable row level security;
@@ -329,6 +385,13 @@ alter table guests enable row level security;
 alter table bookings enable row level security;
 alter table booking_tables enable row level security;
 alter table payments enable row level security;
+
+create policy companies_read on companies for select to authenticated using (is_company_staff(id));
+create policy companies_write on companies for update to authenticated using (is_company_staff(id, 'owner'));
+
+create policy company_members_read on company_members for select to authenticated using (is_company_staff(company_id));
+create policy company_members_write on company_members for all to authenticated
+  using (is_company_staff(company_id, 'owner')) with check (is_company_staff(company_id, 'owner'));
 
 create policy venues_read on venues for select to authenticated using (is_venue_member(id));
 create policy venues_write on venues for update to authenticated using (is_venue_member(id, 'owner'));
@@ -348,12 +411,15 @@ begin
                     using (is_venue_member(venue_id, ''manager'')) with check (is_venue_member(venue_id, ''manager''))', t);
   end loop;
   -- Day-to-day operations: any staff member can read and write.
-  foreach t in array array['guests', 'bookings', 'payments']
+  foreach t in array array['bookings', 'payments']
   loop
     execute format('create policy %1$s_staff on %1$I for all to authenticated
                     using (is_venue_member(venue_id)) with check (is_venue_member(venue_id))', t);
   end loop;
 end $$;
+
+create policy guests_staff on guests for all to authenticated
+  using (is_company_staff(company_id)) with check (is_company_staff(company_id));
 
 create policy combination_members_read on table_combination_members for select to authenticated
   using (exists (select 1 from table_combinations c where c.id = combination_id and is_venue_member(c.venue_id)));
@@ -378,3 +444,18 @@ begin
     alter publication supabase_realtime add table bookings, booking_tables;
   end if;
 end $$;
+
+-- Guest history across both sites, for the CRM and the host's "regular" badge.
+create view guest_stats with (security_invoker = true) as
+select
+  g.id as guest_id,
+  g.company_id,
+  count(b.id) filter (where b.status in ('seated', 'completed')) as visits,
+  count(b.id) filter (where b.status = 'no_show') as no_shows,
+  count(b.id) filter (where b.status = 'cancelled') as cancellations,
+  count(distinct b.venue_id) filter (where b.status in ('seated', 'completed')) as sites_visited,
+  max(b.starts_at) filter (where b.status in ('seated', 'completed')) as last_visit_at,
+  min(b.starts_at) filter (where b.status in ('pending', 'confirmed') and b.starts_at > now()) as next_booking_at
+from guests g
+left join bookings b on b.guest_id = g.id
+group by g.id, g.company_id;
