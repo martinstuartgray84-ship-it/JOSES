@@ -4,6 +4,7 @@ import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { BookingError, createBooking, siteAvailability } from "./booking";
 import { cancelBookingByToken, getBookingByToken, listSites } from "./manage";
+import { loadDiary, setBookingStatus, StatusError } from "./diary";
 
 const url = process.env.DATABASE_URL;
 const hm = (h: number, m = 0) => h * 60 + m;
@@ -164,5 +165,53 @@ describe.skipIf(!url)("booking service", () => {
     expect(await cancelBookingByToken(sql, booking.manageToken, new Date("2026-10-09T19:00:00Z"))).toBe(false);
     expect(await cancelBookingByToken(sql, "' or 1=1 --", now)).toBe(false);
     expect(await getBookingByToken(sql, "nope", now)).toBeNull();
+  });
+
+  it("loads the diary: tables, services, bookings with guest history and local times", async () => {
+    const { a, b } = await company();
+    const x = await book(a, hm(19), { covers: 4, guest: { firstName: "Ana", lastName: "Silva", email: "ana@example.com" } });
+    // A past visit at the other site shows up in her history.
+    const past = await book(b, hm(18), { guest: { firstName: "Ana", email: "ana@example.com" } });
+    await sql`update bookings set status = 'completed' where id = ${past.id}`;
+
+    const diary = await loadDiary(sql, a.slug, date);
+    expect(diary.tables.map((t) => t.label)).toEqual(["T1", "T2", "T3"]);
+    expect(diary.services).toHaveLength(1);
+    expect(diary.bookings).toHaveLength(1);
+    expect(diary.bookings[0]).toMatchObject({
+      id: x.id,
+      start: hm(19),
+      covers: 4,
+      status: "confirmed",
+      guestName: "Ana Silva",
+      visits: 1,
+      tableIds: x.tableIds,
+    });
+    // Other days and other sites stay out.
+    expect((await loadDiary(sql, a.slug, "2026-10-10")).bookings).toHaveLength(0);
+  });
+
+  it("moves bookings through service and frees the table when finished early", async () => {
+    const { b } = await company();
+    const x = await book(b, hm(19));
+    const seatedAt = new Date("2026-10-09T18:05:00Z"); // 19:05 local
+    await setBookingStatus(sql, b.slug, x.id, "seated", seatedAt);
+    await setBookingStatus(sql, b.slug, x.id, "completed", new Date("2026-10-09T19:00:00Z")); // 20:00 local
+    const [row] = await sql`select status, duration_minutes from bookings where id = ${x.id}`;
+    expect(row).toMatchObject({ status: "completed", duration_minutes: 60 });
+    // The 2-top is free again for a 20:15 booking (19:00 + 90 + 15 would have blocked it).
+    await expect(book(b, hm(20, 15))).resolves.toBeTruthy();
+  });
+
+  it("refuses invalid moves, other sites' bookings, and reinstating onto a rebooked table", async () => {
+    const { a, b } = await company();
+    const x = await book(b, hm(19));
+    await expect(setBookingStatus(sql, b.slug, x.id, "completed")).rejects.toMatchObject({ code: "not_allowed" });
+    await expect(setBookingStatus(sql, a.slug, x.id, "seated")).rejects.toMatchObject({ code: "not_found" });
+    await setBookingStatus(sql, b.slug, x.id, "cancelled");
+    await book(b, hm(19), { guest: { firstName: "Bo", email: "bo@example.com" } });
+    const err = await setBookingStatus(sql, b.slug, x.id, "confirmed").catch((e) => e);
+    expect(err).toBeInstanceOf(StatusError);
+    expect(err.code).toBe("table_taken");
   });
 });

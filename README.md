@@ -10,6 +10,7 @@ It's built for one company running two sites. Each site has its own floor plan, 
 | Booking service | `src/server/booking.ts` | Loads a site's day from Postgres, runs the engine, and creates bookings safely under concurrent requests |
 | Core schema | `supabase/migrations` | The Postgres data model, plus a constraint that stops the database ever double-booking a table |
 | Booking widget | `app/book` | Guest booking flow: site, party size, date, time, details. Works as a page or an iframe embed |
+| Host diary | `app/diary` | Staff view of each site's day: timeline of tables against time, floor plan at any moment, and seat / finish / no-show / cancel |
 | Manage page | `app/manage/[token]` | The guest's private link to view or cancel their booking |
 | API routes | `app/api` | `GET /api/sites`, `GET /api/availability`, `POST /api/bookings`, `DELETE /api/manage/:token` |
 | Seed | `supabase/seed.sql` | Placeholder company with two sites, for local development |
@@ -72,6 +73,21 @@ npm run dev        # http://localhost:3000/book
 
 `npm run db:reset` wipes and reseeds; `npm run db:stop` stops it.
 
+## Host diary
+
+`/diary` (staff sign-in required) opens a site's day. Site tabs switch between the two sites, and the arrows move through days.
+
+- **Summary**: covers and bookings per service, how many are in or done, no-shows, and the room's seat count.
+- **Timeline**: one row per table, time across the top. Each booking is a block coloured by status, followed by its reset time. A red line marks now. The arrivals strip shows covers arriving per 15 minutes, so the busy points stand out. Blocked tables (e.g. "Wobbly leg") show hatched.
+- **Floor**: every table's state at the time on the slider. The states are seated (with when it's due to finish), running over, booked and due, late, free with the next booking, or blocked. Seated guests keep the table until someone finishes it, even past their booked time.
+- **Booking panel**: tap any booking to see the guest's phone, notes, history across both sites (★ regular, ! previous no-show) and the actions for its status.
+- **Actions**: seat, finish (frees the table now), back to booked, no-show, or cancel. Reinstating a cancelled booking is refused if its table has been rebooked since.
+- Refreshes every 30 seconds while open, so online bookings appear without reloading.
+
+Tables without a saved floor position (`pos_x` as % across the room, `pos_y` in pixels) are laid out in a grid per area.
+
+**Staff access is interim:** one shared `STAFF_PASSWORD`, swapped for a signed, HttpOnly session cookie (`STAFF_SESSION_SECRET`). The diary stays locked if either is unset. It's checked on every page and every action. Before go-live, replace it with Supabase Auth so each person has their own login and their role from `company_members` / `venue_members` applies.
+
 ## Embedding on your websites
 
 Each site's website can embed its own widget, with no site picker:
@@ -98,7 +114,7 @@ npm run test:db    # throwaway Postgres 15+: migrations, seed, SQL tests, then b
 1. ~~Availability engine~~ and ~~core schema~~
 2. ~~Booking service~~ (availability and create-booking against Postgres)
 3. ~~Next.js app~~: API routes, embeddable booking widget with a site picker, guest view/cancel page
-4. Host diary for tablets: timeline and floor plan, updated live via Supabase realtime
+4. ~~Host diary~~: timeline, floor plan and status actions (next: walk-ins, phone bookings, moving tables, per-person logins, realtime instead of polling)
 5. Admin console for services, tables and payment rules
 6. Stripe: SetupIntents for card holds, deposits and no-show fees
 7. Email and SMS confirmations, reminders, and the amend/cancel link
