@@ -8,6 +8,7 @@ const SITE_SECTIONS = [
   { key: "diary", label: "Diary" },
   { key: "pos", label: "Till" },
   { key: "floor", label: "Floor" },
+  { key: "ops", label: "Ops" },
   { key: "kds", label: "Kitchen & bar" },
   { key: "menu", label: "Menu" },
 ] as const;

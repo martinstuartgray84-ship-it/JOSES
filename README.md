@@ -10,6 +10,8 @@ It's built for one company running two sites. Each site has its own floor plan, 
 | Manage booking | `/manage/<token>` | Guest's private link to view or cancel |
 | Diary | `/diary/<site>` | Timeline and floor plan of the day's bookings; seat, finish, no-show; walk-ins and phone bookings |
 | Till | `/pos/<site>` | PIN sign-in, tables, checks, seats, courses, send/fire, voids, comps, discounts, split payments |
+| Floor | `/floor/<site>` | Every open table coached live: stage, journey, spend against this site's usual pace, and the next thing to do (drinks, orders, fire, upsell, turn) |
+| Ops | `/ops/<site>` | Bar, kitchen and server load right now with what to change; today's covers forecast, staff per hour, kitchen prep and cocktails to batch |
 | Kitchen & bar | `/kds/<site>/<station>` | Station screens with cook-to-sync sequencing, timers, all-day counts, bump and recall; the pass |
 | Menu | `/menu/<site>` | Edit items, prices, GP%, allergens, routing, prep times; 86 and stock per site; spreadsheet import |
 | Dashboard | `/dashboard` | Sales, covers, spend per head, service speed, slow dishes, menu engineering, busy times, bookings, guests, team |
@@ -20,6 +22,8 @@ It's built for one company running two sites. Each site has its own floor plan, 
 |---|---|
 | Availability engine | `src/availability` |
 | Bill maths (VAT, service, splits) | `src/pos/totals.ts` |
+| Table coach | `src/tables/coach.ts` |
+| Ops planning (forecast, staffing, prep, load, alerts) | `src/ops/ops.ts` |
 | Kitchen sequencing (cook to sync) | `src/kitchen/sequencing.ts` |
 | Menu import parser | `src/menu/import.ts` |
 | Segments and email templates | `src/marketing` |

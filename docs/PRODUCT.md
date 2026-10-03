@@ -72,6 +72,17 @@ Every item records when it was ordered, sent, started, ready and served. From th
 - **Guests:** new versus returning, repeat rate, and the lifetime value of a regular.
 - **Bookings:** lead time, channel, cancellation and no-show rates, and empty seats by slot.
 
+### 9. Floor coach (table value)
+- Every open table is placed on its journey: seated, drinks, ordered, starters, mains, after mains, finishing.
+- Spend a head is compared with what this site's tables usually spend by the same minute, learned from the last 8 weeks, lunch and dinner separately.
+- Nudges in priority order. Service failures come first: no drinks, drinks waiting, no food order, mains not fired. Then selling moments: next round, wine with mains, starters, dessert, coffee, each valued by this site's prices and how often guests say yes. Upsells stop when the next booking for the table is close.
+
+### 10. Operations (bar, floor, kitchen)
+- **Right now:** each station's queue, minutes to clear and oldest wait; drinks and plates ready but not run; guests and overdue jobs per server. These become instructions: stagger fires, pull a server onto service bar, who runs what, who takes the next table, and spacing arrivals at the door.
+- **Plan:** covers per hour from bookings (less the site's no-show rate) plus the walk-ins it usually gets on that weekday. As the day goes on, hours already gone use who actually came.
+- **Staff per hour:** servers from guests in the room, bartenders from drinks an hour, cooks from plates an hour, with the busiest role marked.
+- **Prep and batching:** a prep list from expected covers × each dish's usual share plus 15%, and the cocktails worth batching before the peak.
+
 ## Where this beats the field
 
 | | Typical stack | This |
@@ -82,6 +93,8 @@ Every item records when it was ordered, sent, started, ready and served. From th
 | Courses | Server shouts "away" | Hold and fire, tracked per course |
 | Speed metrics | Ticket age at best | Ordered, started, ready and served per item, per station, per dish |
 | Marketing | Separate tool, guessing who visited | Segments from real visits and spend; results counted in bookings |
+| Table management | A floor plan of who's sat where | Each table's spend against pace, and the next thing to do |
+| Staffing | Last year's rota | Staff, prep and batching per hour from tonight's bookings and this site's history |
 | Two sites | Two accounts | One company view, with each site's settings |
 
 ## Build order

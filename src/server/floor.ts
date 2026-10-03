@@ -11,7 +11,7 @@ const MIN_CHECKS = 20;
 const CACHE_MS = 10 * 60_000;
 
 /** SQL that mirrors itemKind() so history and live tables classify items the same way. */
-const KIND_SQL = `case
+export const KIND_SQL = `case
   when coalesce(c.name, '') ~* '(coffee|tea|hot drink|espresso|digestif)' then 'hot'
   when i.course <> 0 then 'food'
   when coalesce(c.name, '') ~* '(wine|fizz|champagne|sparkling|bubbles|prosecco)' then 'wine'
