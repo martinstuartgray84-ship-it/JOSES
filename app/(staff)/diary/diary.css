@@ -1,33 +1,4 @@
 /* Host diary. Built for a tablet in landscape; scrolls sideways on phones. */
-:root {
-  --st-booked: #2f5d8a;
-  --st-booked-bg: #e3ecf6;
-  --st-pending: #a26b00;
-  --st-pending-bg: #fdf1d6;
-  --st-seated: #2e7d4f;
-  --st-seated-bg: #dff1e6;
-  --st-done: #8a8178;
-  --st-done-bg: #efebe6;
-  --st-noshow: #b42318;
-  --st-noshow-bg: #fbe4e1;
-  --row: 52px;
-  --label: 120px;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --st-booked: #8fb8e6;
-    --st-booked-bg: #1d2c3d;
-    --st-pending: #f0c060;
-    --st-pending-bg: #3a2f17;
-    --st-seated: #7fd0a0;
-    --st-seated-bg: #183325;
-    --st-done: #a59c91;
-    --st-done-bg: #2a2622;
-    --st-noshow: #ff8a7a;
-    --st-noshow-bg: #3d1d19;
-  }
-}
-
 .diary { padding: 16px; display: grid; gap: 16px; max-width: 100%; }
 .dhead { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
 .dsites { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 4px; }

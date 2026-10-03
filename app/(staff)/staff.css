@@ -1,0 +1,72 @@
+/* Shared staff-app styles: status colours, nav, panels, chips, dialogs. */
+:root {
+  --st-booked: #2f5d8a;
+  --st-booked-bg: #e3ecf6;
+  --st-pending: #a26b00;
+  --st-pending-bg: #fdf1d6;
+  --st-seated: #2e7d4f;
+  --st-seated-bg: #dff1e6;
+  --st-done: #8a8178;
+  --st-done-bg: #efebe6;
+  --st-noshow: #b42318;
+  --st-noshow-bg: #fbe4e1;
+  --row: 52px;
+  --label: 120px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --st-booked: #8fb8e6;
+    --st-booked-bg: #1d2c3d;
+    --st-pending: #f0c060;
+    --st-pending-bg: #3a2f17;
+    --st-seated: #7fd0a0;
+    --st-seated-bg: #183325;
+    --st-done: #a59c91;
+    --st-done-bg: #2a2622;
+    --st-noshow: #ff8a7a;
+    --st-noshow-bg: #3d1d19;
+  }
+}
+
+.snav { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 4px 16px; flex-wrap: wrap;
+  padding: 8px 16px; background: var(--card); border-bottom: 1px solid var(--line); }
+.snav-brand { font-weight: 800; letter-spacing: -0.01em; margin-right: 4px; }
+.snav-links { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1 1 auto; min-width: 0; }
+.snav-links a { padding: 8px 12px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.snav-links a:hover { color: var(--text); background: var(--bg); }
+.snav-links a.on { color: var(--text); background: var(--accent-soft); }
+.snav select { width: auto; padding: 6px 8px; font-weight: 600; }
+@media (max-width: 640px) { .snav { padding: 6px 12px; } .snav-brand { display: none; } }
+
+.page { padding: 16px; display: grid; gap: 16px; }
+.page-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.page-head h1 { margin: 0; font-size: 1.4rem; }
+.box { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem;
+  font-weight: 600; border: 1px solid var(--line); background: var(--bg); color: var(--muted); white-space: nowrap; }
+.chip.warn { background: var(--st-pending-bg); border-color: var(--st-pending); color: var(--text); }
+.chip.bad { background: var(--st-noshow-bg); border-color: var(--st-noshow); color: var(--text); }
+.chip.good { background: var(--st-seated-bg); border-color: var(--st-seated); color: var(--text); }
+.chip.info { background: var(--st-booked-bg); border-color: var(--st-booked); color: var(--text); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.ghost { background: transparent; }
+.danger-outline { color: var(--danger); border-color: var(--danger); }
+.num { font-variant-numeric: tabular-nums; }
+.right { text-align: right; }
+
+/* Modal dialog */
+.scrim { position: fixed; inset: 0; background: rgb(0 0 0 / 0.4); z-index: 40; display: grid; place-items: center; padding: 16px; }
+.dialog { background: var(--card); border-radius: 12px; width: min(520px, 100%); max-height: calc(100vh - 32px); overflow-y: auto;
+  padding: 20px; display: grid; gap: 14px; box-shadow: 0 16px 48px rgb(0 0 0 / 0.25); }
+.dialog h2 { margin: 0; font-size: 1.25rem; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+
+/* Data tables */
+.tbl { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.tbl th { text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);
+  font-weight: 600; padding: 8px; border-bottom: 1px solid var(--line); }
+.tbl td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl-wrap { overflow-x: auto; }

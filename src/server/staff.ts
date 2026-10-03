@@ -47,6 +47,47 @@ export function verifySessionValue(value: string | undefined, now = Date.now()):
   return safeEqual(value.slice(i + 1), sign(payload));
 }
 
+// --- Till user: which staff member is using this device (after the shared sign-in).
+
+const POS_COOKIE = "pos_staff";
+const POS_TTL_SECONDS = 60 * 60 * 12;
+
+export function signValue(value: string, ttlSeconds: number, now = Date.now()): string {
+  const payload = `${value}.${Math.floor(now / 1000) + ttlSeconds}`;
+  return `${payload}.${sign(`till:${payload}`)}`;
+}
+
+export function readSignedValue(raw: string | undefined, now = Date.now()): string | null {
+  if (!raw) return null;
+  const i = raw.lastIndexOf(".");
+  if (i < 0) return null;
+  const payload = raw.slice(0, i);
+  if (!safeEqual(raw.slice(i + 1), sign(`till:${payload}`))) return null;
+  const j = payload.lastIndexOf(".");
+  const exp = payload.slice(j + 1);
+  if (j < 0 || !/^\d+$/.test(exp) || Number(exp) * 1000 < now) return null;
+  return payload.slice(0, j);
+}
+
+export async function setTillUser(staffId: string) {
+  (await cookies()).set(POS_COOKIE, signValue(staffId, POS_TTL_SECONDS), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: POS_TTL_SECONDS,
+  });
+}
+
+export async function clearTillUser() {
+  (await cookies()).delete(POS_COOKIE);
+}
+
+/** The staff id signed in on the till, if any. */
+export async function tillUserId(): Promise<string | null> {
+  return readSignedValue((await cookies()).get(POS_COOKIE)?.value);
+}
+
 export async function startStaffSession() {
   (await cookies()).set(COOKIE, makeSessionValue(), {
     httpOnly: true,

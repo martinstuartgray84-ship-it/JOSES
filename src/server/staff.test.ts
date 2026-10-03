@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 vi.mock("next/headers", () => ({ cookies: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
-const { checkStaffPassword, makeSessionValue, verifySessionValue } = await import("./staff");
+const { checkStaffPassword, makeSessionValue, readSignedValue, signValue, verifySessionValue } = await import("./staff");
 
 describe("staff session", () => {
   beforeAll(() => {
@@ -33,5 +33,15 @@ describe("staff session", () => {
     process.env.STAFF_PASSWORD = "open sesame";
     expect(checkStaffPassword("open sesame")).toBe(true);
     expect(checkStaffPassword("open sesam")).toBe(false);
+  });
+
+  it("signs till users separately from staff sessions", () => {
+    const now = Date.UTC(2026, 9, 9, 17);
+    const v = signValue("abc-123", 60, now);
+    expect(readSignedValue(v, now)).toBe("abc-123");
+    expect(readSignedValue(v, now + 61_000)).toBeNull();
+    expect(readSignedValue(v.replace("abc", "abd"), now)).toBeNull();
+    // A staff session cookie can't be replayed as a till user.
+    expect(readSignedValue(makeSessionValue(now), now)).toBeNull();
   });
 });

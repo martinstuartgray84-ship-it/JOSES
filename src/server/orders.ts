@@ -200,6 +200,18 @@ export async function getOrder(sql: Db, orderId: string): Promise<OrderView> {
   };
 }
 
+export interface FloorOrder {
+  id: string;
+  number: number;
+  covers: number;
+  openedAt: Date;
+  total: number;
+  itemCount: number;
+  heldCourses: number[];
+  readyToRun: number;
+  guestName: string | null;
+}
+
 export interface FloorTable {
   id: string;
   label: string;
@@ -207,23 +219,13 @@ export interface FloorTable {
   maxCovers: number;
   posX: number | null;
   posY: number | null;
-  order: {
-    id: string;
-    number: number;
-    covers: number;
-    openedAt: Date;
-    total: number;
-    itemCount: number;
-    heldCourses: number[];
-    readyToRun: number;
-    guestName: string | null;
-  } | null;
+  order: FloorOrder | null;
   /** Booking on this table now or within the next 45 minutes. */
   booking: { id: string; guestName: string; covers: number; start: Date; status: string } | null;
 }
 
 /** Every table with its open check (if any) and its current or next booking. */
-export async function siteFloor(sql: Db, site: Site, now = new Date()): Promise<{ tables: FloorTable[]; other: FloorTable["order"][] }> {
+export async function siteFloor(sql: Db, site: Site, now = new Date()): Promise<{ tables: FloorTable[]; other: FloorOrder[] }> {
   const [tables, orders, bookings] = await Promise.all([
     sql`select t.id, t.label, a.name as area_name, t.max_covers, t.pos_x, t.pos_y
         from tables t join areas a on a.id = t.area_id
@@ -251,7 +253,7 @@ export async function siteFloor(sql: Db, site: Site, now = new Date()): Promise<
           and b.starts_at < ${new Date(now.getTime() + 45 * 60_000)}
         order by b.starts_at`,
   ]);
-  const toOrder = (o: (typeof orders)[number]) => ({
+  const toOrder = (o: (typeof orders)[number]): FloorOrder => ({
     id: o.id,
     number: Number(o.number),
     covers: o.covers,
