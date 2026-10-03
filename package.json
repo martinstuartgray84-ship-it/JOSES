@@ -1,0 +1,17 @@
+{
+  "name": "joses",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Commission-free restaurant reservations: availability engine and Supabase schema",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "test:db": "bash supabase/tests/run.sh"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
