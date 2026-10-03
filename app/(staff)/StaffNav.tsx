@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 const SITE_SECTIONS = [
   { key: "diary", label: "Diary" },
   { key: "pos", label: "Till" },
+  { key: "floor", label: "Floor" },
   { key: "kds", label: "Kitchen & bar" },
   { key: "menu", label: "Menu" },
 ] as const;

@@ -16,10 +16,13 @@ export default function PosFloor({
   site,
   user,
   floor,
+  tips,
 }: {
   site: { slug: string; name: string };
   user: StaffMember;
   floor: { tables: FloorTable[]; other: FloorOrder[] };
+  /** Top coach nudge per open check. */
+  tips: Record<string, { title: string; priority: number }>;
 }) {
   const router = useRouter();
   const [opening, setOpening] = useState<FloorTable | "tab" | null>(null);
@@ -96,6 +99,11 @@ export default function PosFloor({
                       {t.order.covers} cvr · {minutesSince(t.order.openedAt)}m{t.order.guestName ? ` · ${t.order.guestName}` : ""}
                     </span>
                     <span className="pt-flags">
+                      {tips[t.order.id] && (
+                        <span className={`chip ${tips[t.order.id]!.priority === 1 ? "bad" : tips[t.order.id]!.priority === 2 ? "warn" : ""}`}>
+                          {tips[t.order.id]!.title}
+                        </span>
+                      )}
                       {t.order.readyToRun > 0 && <span className="chip good">{t.order.readyToRun} ready to run</span>}
                       {t.order.heldCourses.filter((c) => c > 0).length > 0 && (
                         <span className="chip warn">

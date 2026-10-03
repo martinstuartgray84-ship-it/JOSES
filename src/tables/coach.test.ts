@@ -114,6 +114,31 @@ describe("selling moments", () => {
     expect(kinds(coachTable(table({ items, daypart: "lunch" }), B, at(29)))).not.toContain("next_round");
   });
 
+  it("waits for mains to be fired before suggesting wine", () => {
+    const items = [
+      item({ name: "Lager", kind: "drink", course: 0, createdAt: at(2) }),
+      item({ name: "Steak", kind: "food", course: 2, createdAt: at(15), status: "held", sentAt: null, servedAt: null }),
+      item({ name: "Cod", kind: "food", course: 2, createdAt: at(15), status: "held", sentAt: null, servedAt: null }),
+    ];
+    expect(kinds(coachTable(table({ items }), B, at(20)))).not.toContain("wine_with_mains");
+  });
+
+  it("offers dessert, not another round, once mains are finished", () => {
+    const items = [
+      item({ name: "Red", kind: "drink", course: 0, createdAt: at(2) }),
+      item({ name: "Steak", kind: "food", course: 2, createdAt: at(10), sentAt: at(12), servedAt: at(40) }),
+    ];
+    const r = coachTable(table({ items }), B, at(55));
+    expect(kinds(r)).toContain("dessert");
+    expect(kinds(r)).not.toContain("next_round");
+  });
+
+  it("orders service problems by how long they've been waiting", () => {
+    const items = [item({ name: "Spritz", kind: "drink", course: 0, createdAt: at(1), status: "sent", servedAt: null })];
+    const r = coachTable(table({ items }), B, at(14));
+    expect(r.nudges.slice(0, 2).map((n) => n.kind)).toEqual(["drinks_waiting", "take_order"]);
+  });
+
   it("suggests wine with mains when nothing's been ordered to drink with the food", () => {
     const items = [
       item({ name: "Lager", kind: "drink", course: 0, createdAt: at(2) }),

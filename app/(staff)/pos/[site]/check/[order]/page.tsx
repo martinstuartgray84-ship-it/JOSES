@@ -4,6 +4,7 @@ import { db } from "@/src/server/db";
 import { BookingError, getSite } from "@/src/server/booking";
 import { loadMenu } from "@/src/server/menu";
 import { getOrder, listStaff, OrderError } from "@/src/server/orders";
+import { liveFloor } from "@/src/server/floor";
 import { requireStaff, tillUserId } from "@/src/server/staff";
 import CheckScreen from "./CheckScreen";
 import "../../../pos.css";
@@ -22,12 +23,14 @@ export default async function CheckPage({ params }: { params: Promise<{ site: st
     if (!user) redirect(`/pos/${slug}`);
     const order = await getOrder(db(), orderId);
     if (order.venueId !== site.id) notFound();
-    const [menu, tables] = await Promise.all([
+    const [menu, tables, coach] = await Promise.all([
       loadMenu(db(), site),
       db()`select t.id, t.label from tables t where t.venue_id = ${site.id} and t.active
             and not exists (select 1 from orders o where o.table_id = t.id and o.status = 'open')
             order by length(t.label), t.label`,
+      order.status === "open" ? liveFloor(db(), site) : Promise.resolve(null),
     ]);
+    const nudges = coach?.tables.find((t) => t.orderId === order.id)?.result.nudges.slice(0, 2) ?? [];
     return (
       <CheckScreen
         site={{ slug, name: site.name }}
@@ -35,6 +38,7 @@ export default async function CheckPage({ params }: { params: Promise<{ site: st
         order={order}
         menu={menu.map((c) => ({ ...c, items: c.items.filter((i) => i.active && !i.hidden) })).filter((c) => c.items.length)}
         freeTables={tables.map((t) => ({ id: t.id as string, label: t.label as string }))}
+        nudges={nudges.map((n) => ({ title: n.title, detail: n.detail, priority: n.priority }))}
       />
     );
   } catch (err) {

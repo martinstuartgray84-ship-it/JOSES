@@ -50,12 +50,15 @@ export default function CheckScreen({
   order,
   menu,
   freeTables,
+  nudges = [],
 }: {
   site: { slug: string; name: string };
   user: StaffMember;
   order: OrderView;
   menu: MenuCategory[];
   freeTables: { id: string; label: string }[];
+  /** What the floor coach suggests for this table right now. */
+  nudges?: { title: string; detail: string; priority: number }[];
 }) {
   const router = useRouter();
   const [catId, setCatId] = useState(menu[0]?.id ?? "");
@@ -220,6 +223,16 @@ export default function CheckScreen({
               <span className="chip">{order.guestNotes.visits} previous visit{order.guestNotes.visits > 1 ? "s" : ""}</span>
             )}
             {order.guestNotes?.allergies && <span className="chip bad">Note: {order.guestNotes.allergies}</span>}
+          </div>
+        )}
+
+        {nudges.length > 0 && (
+          <div className="coach-strip" role="status">
+            {nudges.map((n) => (
+              <p key={n.title} className={`p${n.priority}`}>
+                <strong>{n.title}</strong> {n.detail}
+              </p>
+            ))}
           </div>
         )}
 

@@ -68,7 +68,8 @@ insert into menu_categories (company_id, name, default_course, default_station, 
   ('11111111-0000-0000-0000-000000000000', 'Desserts', 3, 'kitchen', 4),
   ('11111111-0000-0000-0000-000000000000', 'Cocktails', 0, 'bar', 5),
   ('11111111-0000-0000-0000-000000000000', 'Wine', 0, 'bar', 6),
-  ('11111111-0000-0000-0000-000000000000', 'Beer & soft', 0, 'bar', 7);
+  ('11111111-0000-0000-0000-000000000000', 'Beer & soft', 0, 'bar', 7),
+  ('11111111-0000-0000-0000-000000000000', 'Hot drinks', 0, 'bar', 8);
 
 insert into menu_items (company_id, category_id, name, description, price, cost, prep_minutes, allergens, dietary, sort_order)
 select '11111111-0000-0000-0000-000000000000', c.id, i.name, i.descr, i.price, i.cost, i.prep, i.allergens::text[], i.dietary::text[], i.ord
@@ -99,7 +100,10 @@ from (values
   ('Beer & soft', 'Lager (pint)', null, 650, 160, 1, '{gluten}', '{vegan}', 1),
   ('Beer & soft', 'Pale ale (pint)', null, 680, 170, 1, '{gluten}', '{vegan}', 2),
   ('Beer & soft', 'Sparkling water (750ml)', null, 450, 60, 1, '{}', '{vegan}', 3),
-  ('Beer & soft', 'Fresh lemonade', null, 400, 70, 2, '{}', '{vegan}', 4)
+  ('Beer & soft', 'Fresh lemonade', null, 400, 70, 2, '{}', '{vegan}', 4),
+  ('Hot drinks', 'Espresso', null, 300, 40, 2, '{}', '{vegan}', 1),
+  ('Hot drinks', 'Flat white', null, 380, 60, 3, '{milk}', '{}', 2),
+  ('Hot drinks', 'Pot of tea', null, 350, 30, 2, '{}', '{vegan}', 3)
 ) i(cat, name, descr, price, cost, prep, allergens, dietary, ord)
 join menu_categories c on c.company_id = '11111111-0000-0000-0000-000000000000' and c.name = i.cat;
 

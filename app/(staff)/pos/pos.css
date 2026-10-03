@@ -107,3 +107,8 @@
   .check-bill { border-left: 0; border-top: 1px solid var(--line); }
   .bill-lines { max-height: none; }
 }
+
+.coach-strip { display: grid; gap: 4px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--bg); }
+.coach-strip p { margin: 0; font-size: 0.85rem; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); }
+.coach-strip p.p1 { background: var(--st-noshow-bg); border-color: var(--st-noshow); }
+.coach-strip p.p2 { background: var(--st-pending-bg); border-color: var(--st-pending); }

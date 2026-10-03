@@ -1,0 +1,59 @@
+.floor-page { max-width: 1400px; margin: 0 auto; width: 100%; }
+.floor-totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.ft { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; display: grid; }
+.ft span { font-size: 0.82rem; color: var(--muted); }
+.ft strong { font-size: 1.5rem; font-weight: 700; }
+.ft.opp { border-color: var(--st-seated); }
+.ft.urgent { border-color: var(--st-noshow); background: var(--st-noshow-bg); }
+.server-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.server-strip button { display: grid; text-align: left; gap: 0; padding: 6px 12px; white-space: nowrap; }
+.server-strip button.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.server-strip button.on .small { color: var(--bg); opacity: 0.8; }
+
+.coach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 12px; align-items: start; }
+.coach-card { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 10px; min-width: 0; }
+.coach-card.p1 { border-left-color: var(--st-noshow); }
+.coach-card.p2 { border-left-color: var(--st-pending); }
+.coach-card header { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.coach-card h2 { margin: 0; font-size: 1.25rem; }
+.coach-card header p { margin: 2px 0 0; }
+.coach-card header .chip { margin-left: 4px; }
+.allergy-line { margin: 4px 0 0; color: var(--st-noshow); font-weight: 600; font-size: 0.85rem; }
+
+.stages { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.stages li { height: 6px; border-radius: 3px; background: var(--line); position: relative; }
+.stages li.done { background: var(--st-seated); }
+.stages li.now { background: var(--st-booked); }
+.stages li span { position: absolute; top: 8px; left: 0; font-size: 0.68rem; color: var(--muted); white-space: nowrap; display: none; }
+.stages li.now span { display: block; font-weight: 700; color: var(--text); }
+
+.journey { margin-top: 10px; }
+.j-track { position: relative; height: 26px; border-radius: 13px; background: var(--bg); border: 1px solid var(--line); }
+.j-done { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent-soft); border-radius: 13px 0 0 13px; }
+.j-ev { position: absolute; top: 50%; transform: translate(-50%, -50%); font-size: 13px; line-height: 1; }
+.j-ev.future { opacity: 0.55; }
+.j-ev.k-next_booking { color: var(--st-noshow); font-weight: 800; }
+.j-now { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--st-noshow); }
+.j-labels { display: flex; justify-content: space-between; gap: 8px; margin-top: 3px; }
+.j-labels span:last-child { text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.money { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.money > div { display: grid; }
+.money strong { font-size: 1.1rem; }
+.money .behind { color: var(--danger); font-weight: 600; }
+.money .ahead { color: var(--st-seated); font-weight: 600; }
+
+.nudges { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.nudge { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
+.nudge > div:first-child { display: grid; min-width: 0; }
+.nudge.p1 { background: var(--st-noshow-bg); border-color: var(--st-noshow); }
+.nudge.p2 { background: var(--st-pending-bg); border-color: var(--st-pending); }
+.nudge .right { display: grid; justify-items: end; align-content: start; }
+.nudge .nv { font-weight: 800; color: var(--st-seated); }
+.all-good { margin: 0; color: var(--st-seated); font-weight: 600; }
+.rules summary { cursor: pointer; font-weight: 600; }
+.rules ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+@media (max-width: 420px) { .coach-grid { grid-template-columns: minmax(0, 1fr); } .money { grid-template-columns: 1fr 1fr; } }
+.coach-card > * { min-width: 0; }
+.j-labels span { min-width: 0; }
+.j-labels span:first-child { flex: none; }

@@ -316,7 +316,8 @@ export function coachTable(t: CoachTable, b: Benchmark, now: Date): CoachResult 
     }
     const drinksSinceFood = foodOrderAt ? drinks.filter((i) => i.createdAt >= new Date(foodOrderAt.getTime() - 5 * MIN)) : [];
     const hasWine = drinks.some((i) => i.kind === "wine");
-    if (mains.length && !mainsOut && covers >= 2 && !hasWine && drinksSinceFood.length === 0) {
+    // Once mains are fired: the moment guests think about what goes with them.
+    if (mains.length && mainsFired && !mainsOut && covers >= 2 && !hasWine && drinksSinceFood.length === 0) {
       add({
         kind: "wine_with_mains",
         priority: 2,
@@ -334,7 +335,9 @@ export function coachTable(t: CoachTable, b: Benchmark, now: Date): CoachResult 
       sinceDrink >= roundEvery &&
       lastDrinksServed &&
       rounds.length / covers < RULES.maxRoundsPerCoverHint &&
-      stage !== "finishing"
+      // After mains it's dessert and coffee time, not another round.
+      stage !== "finishing" &&
+      stage !== "dessert"
     ) {
       add({
         kind: "next_round",
@@ -396,7 +399,8 @@ export function coachTable(t: CoachTable, b: Benchmark, now: Date): CoachResult 
     });
   }
 
-  nudges.sort((x, y) => x.priority - y.priority || y.value - x.value || y.dueFor - x.dueFor);
+  // Service problems: longest-waiting first. Selling: most valuable first.
+  nudges.sort((x, y) => x.priority - y.priority || (x.priority === 1 ? y.dueFor - x.dueFor : y.value - x.value) || y.dueFor - x.dueFor);
 
   const timeline: TimelineEvent[] = [{ at: t.openedAt, kind: "seated", label: `Seated ${covers}` }];
   rounds.forEach((r, i) => timeline.push({ at: r, kind: "drinks", label: i === 0 ? "First drinks" : `Round ${i + 1}` }));

@@ -36,13 +36,14 @@ declare
   p float; covers int; guest uuid; booking uuid; o_id uuid; b_status booking_status;
   t0 timestamptz; t_drinks timestamptz; t_start timestamptz; t_mainsfire timestamptz; t_dessert timestamptz; t_last timestamptz; t_close timestamptz;
   peak boolean; late float; staff uuid; staff_ids uuid[]; guests uuid[];
-  drinks uuid[]; starters uuid[]; mains uuid[]; sides uuid[]; desserts uuid[];
+  drinks uuid[]; starters uuid[]; mains uuid[]; sides uuid[]; desserts uuid[]; hots uuid[]; t_hot timestamptz;
   i int; n int; it record; tk uuid; total int; tip int; lead interval; svc_pct numeric;
   item_rows jsonb;
 begin
   select array_agg(id) into staff_ids from staff_members where company_id = '11111111-0000-0000-0000-000000000000';
   select array_agg(id order by email) into guests from guests where company_id = '11111111-0000-0000-0000-000000000000' and email like 'guest%@example.com';
-  select array_agg(i.id) into drinks from menu_items i join menu_categories c on c.id = i.category_id where c.default_course = 0;
+  select array_agg(i.id) into drinks from menu_items i join menu_categories c on c.id = i.category_id where c.default_course = 0 and c.name <> 'Hot drinks';
+  select array_agg(i.id) into hots from menu_items i join menu_categories c on c.id = i.category_id where c.name = 'Hot drinks';
   select array_agg(i.id) into starters from menu_items i join menu_categories c on c.id = i.category_id where c.name = 'Small plates';
   select array_agg(i.id) into mains from menu_items i join menu_categories c on c.id = i.category_id where c.name = 'Mains';
   select array_agg(i.id) into sides from menu_items i join menu_categories c on c.id = i.category_id where c.name = 'Sides';
@@ -164,6 +165,18 @@ begin
                        t_dessert + make_interval(secs => (m.prep_minutes + late * 0.4 + random() * 1.5) * 60),
                        t_dessert + make_interval(secs => (m.prep_minutes + late * 0.4 + random() * 1.5 + 1 + random() * 2) * 60)
                 from menu_items m where m.id = (select pg_temp.pick(desserts));
+              end if;
+            end loop;
+
+            -- Coffee for some, after dessert (or mains).
+            select max(served_at) into t_last from order_items where order_items.order_id = o_id;
+            t_hot := t_last + make_interval(mins => 5 + floor(random() * 8)::int);
+            for i in 1 .. covers loop
+              if random() < 0.3 then
+                insert into order_items (order_id, venue_id, menu_item_id, name, unit_price, quantity, cost, course, station, prep_minutes, status, added_by, created_at, sent_at, started_at, ready_at, served_at)
+                select o_id, v.id, m.id, m.name, m.price, 1, m.cost, 0, 'bar', m.prep_minutes, 'served', staff,
+                       t_hot, t_hot, t_hot, t_hot + make_interval(mins => m.prep_minutes), t_hot + make_interval(mins => m.prep_minutes + 1)
+                from menu_items m where m.id = (select pg_temp.pick(hots));
               end if;
             end loop;
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/src/server/db";
 import { BookingError, getSite } from "@/src/server/booking";
 import { listStaff, siteFloor } from "@/src/server/orders";
+import { liveFloor } from "@/src/server/floor";
 import { requireStaff, tillUserId } from "@/src/server/staff";
 import PinPad from "./PinPad";
 import PosFloor from "./PosFloor";
@@ -26,6 +27,9 @@ export default async function PosPage({ params }: { params: Promise<{ site: stri
   const user = staff.find((s) => s.id === userId);
   if (!user) return <PinPad siteSlug={slug} staff={staff} />;
 
-  const floor = await siteFloor(db(), site);
-  return <PosFloor site={{ slug, name: site.name }} user={user} floor={floor} />;
+  const [floor, coach] = await Promise.all([siteFloor(db(), site), liveFloor(db(), site)]);
+  const tips = Object.fromEntries(
+    coach.tables.filter((t) => t.result.nudges[0]).map((t) => [t.orderId, { title: t.result.nudges[0]!.title, priority: t.result.nudges[0]!.priority }]),
+  );
+  return <PosFloor site={{ slug, name: site.name }} user={user} floor={floor} tips={tips} />;
 }
