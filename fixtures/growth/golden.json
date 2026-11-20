@@ -1,0 +1,1010 @@
+{
+ "note": "Sample is invented data for a 60-seat site. Period = last 12 weeks of the sample; prior = the 12 weeks before.",
+ "seats": 60,
+ "counts": {
+  "checks": 4394,
+  "items": 34239,
+  "bookings": 3131
+ },
+ "range": {
+  "minDay": "2026-05-19",
+  "maxDay": "2026-11-15",
+  "from": "2026-08-24",
+  "to": "2026-11-15",
+  "priorFrom": "2026-06-01",
+  "priorTo": "2026-08-23"
+ },
+ "summary": {
+  "sales": 209458,
+  "covers": 6369,
+  "checks": 2111,
+  "weeks": 12,
+  "salesPerWeek": 17454.8333,
+  "coversPerWeek": 530.75,
+  "sph": 32.8871,
+  "dpc": 1.604,
+  "drinkShare": 0.4692,
+  "starterAttach": 0.4192,
+  "dessertAttach": 0.122,
+  "turn": 73.855,
+  "gp": 0.7053,
+  "lateShare": 0.0774,
+  "lateSalesPerWeek": 1351,
+  "noShow": 0.0253,
+  "bookings": 1478,
+  "cancelRate": 0.0636
+ },
+ "prior": {
+  "sales": 191326.5,
+  "covers": 6073,
+  "checks": 1951,
+  "weeks": 12,
+  "salesPerWeek": 15943.875,
+  "coversPerWeek": 506.0833,
+  "sph": 31.5044,
+  "dpc": 1.4352,
+  "drinkShare": 0.445,
+  "starterAttach": 0.4064,
+  "dessertAttach": 0.1247,
+  "turn": 77.8519,
+  "gp": 0.7046,
+  "lateShare": 0.0641,
+  "lateSalesPerWeek": 1021.5417,
+  "noShow": 0.0452,
+  "bookings": 1426,
+  "cancelRate": 0.0701
+ },
+ "weekly": [
+  {
+   "week": "2026-05-18",
+   "sales": 16149,
+   "covers": 510,
+   "sph": 31.6647,
+   "dpc": 1.4157,
+   "turn": 78.6886,
+   "noShow": 0.0577
+  },
+  {
+   "week": "2026-05-25",
+   "sales": 15632,
+   "covers": 514,
+   "sph": 30.4125,
+   "dpc": 1.4261,
+   "turn": 77.2182,
+   "noShow": 0.0374
+  },
+  {
+   "week": "2026-06-01",
+   "sales": 14255,
+   "covers": 454,
+   "sph": 31.3987,
+   "dpc": 1.4868,
+   "turn": 76.9116,
+   "noShow": 0.0198
+  },
+  {
+   "week": "2026-06-08",
+   "sales": 16351,
+   "covers": 522,
+   "sph": 31.3238,
+   "dpc": 1.4195,
+   "turn": 78.8137,
+   "noShow": 0.0619
+  },
+  {
+   "week": "2026-06-15",
+   "sales": 16105.5,
+   "covers": 505,
+   "sph": 31.8921,
+   "dpc": 1.497,
+   "turn": 76.0809,
+   "noShow": 0.0268
+  },
+  {
+   "week": "2026-06-22",
+   "sales": 15708,
+   "covers": 500,
+   "sph": 31.416,
+   "dpc": 1.394,
+   "turn": 76.0062,
+   "noShow": 0.0407
+  },
+  {
+   "week": "2026-06-29",
+   "sales": 16497.5,
+   "covers": 532,
+   "sph": 31.0103,
+   "dpc": 1.4699,
+   "turn": 77.7841,
+   "noShow": 0.0583
+  },
+  {
+   "week": "2026-07-06",
+   "sales": 15133,
+   "covers": 480,
+   "sph": 31.5271,
+   "dpc": 1.3771,
+   "turn": 77.3514,
+   "noShow": 0.0755
+  },
+  {
+   "week": "2026-07-13",
+   "sales": 16480,
+   "covers": 521,
+   "sph": 31.6315,
+   "dpc": 1.4203,
+   "turn": 78.8193,
+   "noShow": 0.0364
+  },
+  {
+   "week": "2026-07-20",
+   "sales": 15665,
+   "covers": 510,
+   "sph": 30.7157,
+   "dpc": 1.3686,
+   "turn": 78.303,
+   "noShow": 0.0485
+  },
+  {
+   "week": "2026-07-27",
+   "sales": 15793.5,
+   "covers": 502,
+   "sph": 31.4612,
+   "dpc": 1.4004,
+   "turn": 78.3642,
+   "noShow": 0.036
+  },
+  {
+   "week": "2026-08-03",
+   "sales": 16938,
+   "covers": 521,
+   "sph": 32.5106,
+   "dpc": 1.5643,
+   "turn": 78.8704,
+   "noShow": 0.0183
+  },
+  {
+   "week": "2026-08-10",
+   "sales": 15858,
+   "covers": 506,
+   "sph": 31.3399,
+   "dpc": 1.4387,
+   "turn": 78.25,
+   "noShow": 0.068
+  },
+  {
+   "week": "2026-08-17",
+   "sales": 16542,
+   "covers": 520,
+   "sph": 31.8115,
+   "dpc": 1.3846,
+   "turn": 78.6095,
+   "noShow": 0.0522
+  },
+  {
+   "week": "2026-08-24",
+   "sales": 18489.5,
+   "covers": 560,
+   "sph": 33.017,
+   "dpc": 1.6125,
+   "turn": 77.8736,
+   "noShow": 0.0565
+  },
+  {
+   "week": "2026-08-31",
+   "sales": 16843,
+   "covers": 523,
+   "sph": 32.2046,
+   "dpc": 1.5545,
+   "turn": 75.7345,
+   "noShow": 0.0175
+  },
+  {
+   "week": "2026-09-07",
+   "sales": 18033.5,
+   "covers": 534,
+   "sph": 33.7706,
+   "dpc": 1.6985,
+   "turn": 77.5952,
+   "noShow": 0.0541
+  },
+  {
+   "week": "2026-09-14",
+   "sales": 16415,
+   "covers": 500,
+   "sph": 32.83,
+   "dpc": 1.568,
+   "turn": 76.1705,
+   "noShow": 0.0385
+  },
+  {
+   "week": "2026-09-21",
+   "sales": 17440,
+   "covers": 521,
+   "sph": 33.4741,
+   "dpc": 1.6564,
+   "turn": 75.9538,
+   "noShow": 0.0088
+  },
+  {
+   "week": "2026-09-28",
+   "sales": 17241,
+   "covers": 531,
+   "sph": 32.4689,
+   "dpc": 1.6441,
+   "turn": 76.125,
+   "noShow": 0
+  },
+  {
+   "week": "2026-10-05",
+   "sales": 17203,
+   "covers": 519,
+   "sph": 33.1464,
+   "dpc": 1.5954,
+   "turn": 70.4881,
+   "noShow": 0
+  },
+  {
+   "week": "2026-10-12",
+   "sales": 17381,
+   "covers": 533,
+   "sph": 32.6098,
+   "dpc": 1.6492,
+   "turn": 70.337,
+   "noShow": 0.0248
+  },
+  {
+   "week": "2026-10-19",
+   "sales": 18495.5,
+   "covers": 549,
+   "sph": 33.6894,
+   "dpc": 1.643,
+   "turn": 71.6811,
+   "noShow": 0.0299
+  },
+  {
+   "week": "2026-10-26",
+   "sales": 17990.5,
+   "covers": 560,
+   "sph": 32.1259,
+   "dpc": 1.4893,
+   "turn": 70.9837,
+   "noShow": 0.0167
+  },
+  {
+   "week": "2026-11-02",
+   "sales": 17059,
+   "covers": 520,
+   "sph": 32.8058,
+   "dpc": 1.5673,
+   "turn": 70.8218,
+   "noShow": 0.0317
+  },
+  {
+   "week": "2026-11-09",
+   "sales": 16867,
+   "covers": 519,
+   "sph": 32.499,
+   "dpc": 1.5703,
+   "turn": 72.6467,
+   "noShow": 0.0189
+  }
+ ],
+ "heat": {
+  "hmin": 12,
+  "hmax": 25,
+  "peak": 17.0791,
+  "peakFriSat": 14.834,
+  "lateFriSat": 5.0105,
+  "grid": [
+   {
+    "days": 0,
+    "rev": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "occ": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   },
+   {
+    "days": 12,
+    "rev": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     0.8047,
+     2.5246,
+     6.3475,
+     7.9113,
+     4.89,
+     2.8986,
+     1.6546,
+     0.2298,
+     null
+    ],
+    "occ": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     0.03,
+     0.1004,
+     0.2517,
+     0.3279,
+     0.2051,
+     0.1169,
+     0.0683,
+     0.0069,
+     null
+    ]
+   },
+   {
+    "days": 12,
+    "rev": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     1.1754,
+     4.4049,
+     7.1134,
+     8.3417,
+     7.0133,
+     3.5873,
+     1.5632,
+     0.4285,
+     0.0065
+    ],
+    "occ": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     0.0509,
+     0.1735,
+     0.2867,
+     0.3305,
+     0.2817,
+     0.1313,
+     0.0582,
+     0.0144,
+     0.0002
+    ]
+   },
+   {
+    "days": 12,
+    "rev": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     0.9244,
+     4.9985,
+     8.5192,
+     11.0956,
+     10.2055,
+     6.9068,
+     3.1621,
+     0.415,
+     null
+    ],
+    "occ": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     0.038,
+     0.1995,
+     0.3277,
+     0.4535,
+     0.4251,
+     0.2694,
+     0.111,
+     0.0114,
+     null
+    ]
+   },
+   {
+    "days": 12,
+    "rev": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     1.4401,
+     7.5998,
+     14.2832,
+     17.0791,
+     13.9967,
+     8.5346,
+     2.634,
+     0.461,
+     null
+    ],
+    "occ": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     0.0516,
+     0.2833,
+     0.5535,
+     0.7066,
+     0.5652,
+     0.3288,
+     0.1004,
+     0.0144,
+     null
+    ]
+   },
+   {
+    "days": 12,
+    "rev": [
+     2.6336,
+     6.6769,
+     7.4211,
+     5.0114,
+     2.1119,
+     1.903,
+     6.26,
+     11.9187,
+     16.055,
+     11.1664,
+     6.2715,
+     2.6019,
+     0.9221,
+     null
+    ],
+    "occ": [
+     0.1005,
+     0.2619,
+     0.3013,
+     0.1938,
+     0.0837,
+     0.0759,
+     0.2384,
+     0.4628,
+     0.6443,
+     0.4628,
+     0.2671,
+     0.1178,
+     0.0351,
+     null
+    ]
+   },
+   {
+    "days": 12,
+    "rev": [
+     1.313,
+     3.0405,
+     3.2931,
+     1.5601,
+     0.7989,
+     2.0266,
+     3.2379,
+     4.5846,
+     7.1061,
+     5.6009,
+     3.022,
+     0.9446,
+     0.2815,
+     null
+    ],
+    "occ": [
+     0.0521,
+     0.1265,
+     0.131,
+     0.066,
+     0.038,
+     0.0814,
+     0.1311,
+     0.1852,
+     0.2909,
+     0.2422,
+     0.1336,
+     0.0398,
+     0.0087,
+     null
+    ]
+   }
+  ]
+ },
+ "menu": [
+  {
+   "item": "House margarita",
+   "group": "drink",
+   "qty": 2289,
+   "sales": 22890,
+   "margin": 7.9,
+   "contribution": 18083.1,
+   "cls": "Star"
+  },
+  {
+   "item": "Spicy margarita",
+   "group": "drink",
+   "qty": 1420,
+   "sales": 15620,
+   "margin": 8.6,
+   "contribution": 12212,
+   "cls": "Star"
+  },
+  {
+   "item": "Al pastor tacos",
+   "group": "food",
+   "qty": 1212,
+   "sales": 15150,
+   "margin": 9.1,
+   "contribution": 11029.2,
+   "cls": "Star"
+  },
+  {
+   "item": "Birria tacos",
+   "group": "food",
+   "qty": 1142,
+   "sales": 16559,
+   "margin": 9.1,
+   "contribution": 10392.2,
+   "cls": "Star"
+  },
+  {
+   "item": "Margarita pitcher",
+   "group": "drink",
+   "qty": 322,
+   "sales": 11592,
+   "margin": 27.5,
+   "contribution": 8855,
+   "cls": "Puzzle"
+  },
+  {
+   "item": "Baja fish tacos",
+   "group": "food",
+   "qty": 907,
+   "sales": 12244.5,
+   "margin": 8.8,
+   "contribution": 7981.6,
+   "cls": "Star"
+  },
+  {
+   "item": "Frozen margarita",
+   "group": "drink",
+   "qty": 768,
+   "sales": 8064,
+   "margin": 8.5,
+   "contribution": 6528,
+   "cls": "Star"
+  },
+  {
+   "item": "Guacamole and totopos",
+   "group": "food",
+   "qty": 1156,
+   "sales": 8670,
+   "margin": 5.6,
+   "contribution": 6473.6,
+   "cls": "Plough horse"
+  },
+  {
+   "item": "Mezcal paloma",
+   "group": "drink",
+   "qty": 606,
+   "sales": 6969,
+   "margin": 8.6,
+   "contribution": 5211.6,
+   "cls": "Star"
+  },
+  {
+   "item": "Carnitas burrito",
+   "group": "food",
+   "qty": 692,
+   "sales": 8996,
+   "margin": 7.4,
+   "contribution": 5120.8,
+   "cls": "Star"
+  },
+  {
+   "item": "Tommy's premium margarita",
+   "group": "drink",
+   "qty": 513,
+   "sales": 6925.5,
+   "margin": 9.9,
+   "contribution": 5078.7,
+   "cls": "Star"
+  },
+  {
+   "item": "Short rib quesadilla",
+   "group": "food",
+   "qty": 593,
+   "sales": 8895,
+   "margin": 7.6,
+   "contribution": 4506.8,
+   "cls": "Star"
+  },
+  {
+   "item": "Mushroom tacos",
+   "group": "food",
+   "qty": 414,
+   "sales": 4761,
+   "margin": 8.9,
+   "contribution": 3684.6,
+   "cls": "Star"
+  },
+  {
+   "item": "Modelo",
+   "group": "drink",
+   "qty": 1179,
+   "sales": 5895,
+   "margin": 3.1,
+   "contribution": 3654.9,
+   "cls": "Plough horse"
+  },
+  {
+   "item": "Queso fundido",
+   "group": "food",
+   "qty": 576,
+   "sales": 4896,
+   "margin": 5.9,
+   "contribution": 3398.4,
+   "cls": "Plough horse"
+  },
+  {
+   "item": "Churros",
+   "group": "food",
+   "qty": 535,
+   "sales": 3745,
+   "margin": 5.6,
+   "contribution": 2996,
+   "cls": "Plough horse"
+  },
+  {
+   "item": "Carne asada",
+   "group": "food",
+   "qty": 285,
+   "sales": 5985,
+   "margin": 10.5,
+   "contribution": 2992.5,
+   "cls": "Puzzle"
+  },
+  {
+   "item": "Enchiladas verdes",
+   "group": "food",
+   "qty": 264,
+   "sales": 3564,
+   "margin": 9.9,
+   "contribution": 2613.6,
+   "cls": "Puzzle"
+  },
+  {
+   "item": "Tequila flight",
+   "group": "drink",
+   "qty": 245,
+   "sales": 3920,
+   "margin": 10.5,
+   "contribution": 2572.5,
+   "cls": "Puzzle"
+  },
+  {
+   "item": "Tajin fries",
+   "group": "food",
+   "qty": 636,
+   "sales": 2862,
+   "margin": 3.8,
+   "contribution": 2416.8,
+   "cls": "Plough horse"
+  },
+  {
+   "item": "Elote",
+   "group": "food",
+   "qty": 461,
+   "sales": 2996.5,
+   "margin": 5,
+   "contribution": 2305,
+   "cls": "Plough horse"
+  },
+  {
+   "item": "Glass of wine",
+   "group": "drink",
+   "qty": 507,
+   "sales": 3549,
+   "margin": 4.4,
+   "contribution": 2230.8,
+   "cls": "Plough horse"
+  },
+  {
+   "item": "Mezcal pour",
+   "group": "drink",
+   "qty": 356,
+   "sales": 3204,
+   "margin": 6,
+   "contribution": 2136,
+   "cls": "Dog"
+  },
+  {
+   "item": "Rice and beans",
+   "group": "food",
+   "qty": 573,
+   "sales": 2578.5,
+   "margin": 3.7,
+   "contribution": 2120.1,
+   "cls": "Plough horse"
+  },
+  {
+   "item": "Street corn ribs",
+   "group": "food",
+   "qty": 480,
+   "sales": 2880,
+   "margin": 4.4,
+   "contribution": 2112,
+   "cls": "Plough horse"
+  },
+  {
+   "item": "Tuna tostada",
+   "group": "food",
+   "qty": 344,
+   "sales": 3784,
+   "margin": 6.1,
+   "contribution": 2098.4,
+   "cls": "Dog"
+  },
+  {
+   "item": "Pacifico",
+   "group": "drink",
+   "qty": 667,
+   "sales": 3335,
+   "margin": 3.1,
+   "contribution": 2067.7,
+   "cls": "Plough horse"
+  },
+  {
+   "item": "Agua fresca",
+   "group": "drink",
+   "qty": 450,
+   "sales": 1800,
+   "margin": 3.4,
+   "contribution": 1530,
+   "cls": "Dog"
+  },
+  {
+   "item": "Tres leches",
+   "group": "food",
+   "qty": 242,
+   "sales": 1815,
+   "margin": 5.5,
+   "contribution": 1331,
+   "cls": "Dog"
+  },
+  {
+   "item": "Virgin margarita",
+   "group": "drink",
+   "qty": 234,
+   "sales": 1521,
+   "margin": 5.3,
+   "contribution": 1240.2,
+   "cls": "Dog"
+  },
+  {
+   "item": "Jarritos",
+   "group": "drink",
+   "qty": 432,
+   "sales": 1512,
+   "margin": 2.5,
+   "contribution": 1080,
+   "cls": "Dog"
+  },
+  {
+   "item": "Michelada",
+   "group": "drink",
+   "qty": 228,
+   "sales": 1482,
+   "margin": 4.6,
+   "contribution": 1048.8,
+   "cls": "Dog"
+  },
+  {
+   "item": "Chicharron",
+   "group": "food",
+   "qty": 133,
+   "sales": 798,
+   "margin": 4.8,
+   "contribution": 638.4,
+   "cls": "Dog"
+  }
+ ],
+ "servers": {
+  "median": 32.4957,
+  "gapPerWeek": 624.0312,
+  "list": [
+   {
+    "server": "Camila",
+    "covers": 1333,
+    "sph": 37.0105,
+    "dpc": 1.8867,
+    "starter": 0.5086,
+    "dessert": 0.156
+   },
+   {
+    "server": "Diego",
+    "covers": 1291,
+    "sph": 34.5949,
+    "dpc": 1.7529,
+    "starter": 0.4516,
+    "dessert": 0.1263
+   },
+   {
+    "server": "Sofia",
+    "covers": 1027,
+    "sph": 33.7157,
+    "dpc": 1.6232,
+    "starter": 0.4684,
+    "dessert": 0.1315
+   },
+   {
+    "server": "Mateo",
+    "covers": 1106,
+    "sph": 31.2758,
+    "dpc": 1.5208,
+    "starter": 0.3933,
+    "dessert": 0.1076
+   },
+   {
+    "server": "Lucia",
+    "covers": 813,
+    "sph": 29.6415,
+    "dpc": 1.3899,
+    "starter": 0.3235,
+    "dessert": 0.0984
+   },
+   {
+    "server": "Andres",
+    "covers": 799,
+    "sph": 27.7165,
+    "dpc": 1.2003,
+    "starter": 0.2879,
+    "dessert": 0.0901
+   }
+  ]
+ },
+ "parties": [
+  {
+   "label": "1",
+   "share": 0.0507,
+   "covers": 107,
+   "turn": 59.9065,
+   "sph": 33.4065
+  },
+  {
+   "label": "2",
+   "share": 0.5045,
+   "covers": 2130,
+   "turn": 67.0864,
+   "sph": 32.4585
+  },
+  {
+   "label": "3 to 4",
+   "share": 0.3169,
+   "covers": 2474,
+   "turn": 78.9567,
+   "sph": 32.8943
+  },
+  {
+   "label": "5 to 6",
+   "share": 0.0952,
+   "covers": 1106,
+   "turn": 89.0597,
+   "sph": 33.0986
+  },
+  {
+   "label": "7 or more",
+   "share": 0.0327,
+   "covers": 552,
+   "turn": 106.2029,
+   "sph": 33.9846
+  }
+ ],
+ "dayparts": [
+  {
+   "label": "Lunch and afternoon",
+   "sales": 25076.5,
+   "share": 0.1197,
+   "sph": 33.48,
+   "drinkShare": 0.4492
+  },
+  {
+   "label": "Dinner",
+   "sales": 168169.5,
+   "share": 0.8029,
+   "sph": 33.6811,
+   "drinkShare": 0.4419
+  },
+  {
+   "label": "Late, from 10pm",
+   "sales": 16212,
+   "share": 0.0774,
+   "sph": 25.8565,
+   "drinkShare": 0.7837
+  }
+ ],
+ "channels": [
+  {
+   "channel": "Direct web",
+   "total": 697,
+   "covers": 1919,
+   "noShowRate": 0.0244,
+   "avgLead": 3.6887
+  },
+  {
+   "channel": "Google",
+   "total": 293,
+   "covers": 808,
+   "noShowRate": 0.0254,
+   "avgLead": 3.3686
+  },
+  {
+   "channel": "OpenTable",
+   "total": 279,
+   "covers": 752,
+   "noShowRate": 0.0233,
+   "avgLead": 3.828
+  },
+  {
+   "channel": "Phone",
+   "total": 209,
+   "covers": 598,
+   "noShowRate": 0.0308,
+   "avgLead": 3.5933
+  }
+ ],
+ "beforeAfter": {
+  "dpc_from_week15": {
+   "before": 1.4299,
+   "after": 1.604,
+   "change": 0.1218,
+   "weeksAfter": 12
+  },
+  "noShow_from_week19": {
+   "before": 0.0477,
+   "after": 0.0172,
+   "change": -0.6396,
+   "weeksAfter": 8
+  },
+  "turn_from_week21": {
+   "before": 76.576,
+   "after": 71.152,
+   "change": -0.0708,
+   "weeksAfter": 6
+  }
+ }
+}
