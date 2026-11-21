@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "vite-node scripts/build-demo-db.ts && next build",
+    "demo:db": "vite-node scripts/build-demo-db.ts",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -107,3 +107,37 @@ details.gadd[open] > summary { margin-bottom: 12px; }
 .gsay dt { font-weight: 600; }
 .gsay dd { margin: 0; }
 details > .gform { margin-top: 10px; }
+
+/* Grouped programme navigation */
+.gnav-links { gap: 0 14px; align-items: flex-end; }
+.gnav-group { display: flex; align-items: flex-end; gap: 2px; position: relative; padding-top: 16px; flex: none; }
+.gnav-label { position: absolute; top: 0; left: 12px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); white-space: nowrap; }
+
+/* Overview */
+.ggoal { display: grid; grid-template-columns: auto auto auto minmax(0, 1fr); gap: 16px 28px; align-items: center; }
+.garrow { font-size: 1.8rem; color: var(--muted); }
+.ggoal-bar { display: grid; gap: 8px; min-width: 0; }
+@media (max-width: 900px) { .ggoal { grid-template-columns: 1fr auto 1fr; } .ggoal-bar { grid-column: 1 / -1; } }
+@media (max-width: 480px) { .ggoal { grid-template-columns: 1fr; } .garrow { display: none; } .ggoal .gtotal { font-size: 1.8rem; } }
+.gstack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--viz-empty); gap: 2px; }
+.gstack i { display: block; min-width: 0; }
+.gstack .banked, .glegend .banked { background: var(--st-seated); }
+.gstack .planned, .glegend .planned { background: var(--series-1); }
+.gstack .gap, .glegend .gap { background: var(--viz-grid); }
+.glegend { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; }
+.glegend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; }
+.ggatepips { display: inline-flex; gap: 4px; }
+.ggatepips i { width: 14px; height: 8px; border-radius: 2px; background: var(--viz-grid); }
+.ggatepips i.passed { background: var(--st-seated); }
+.ggatepips i.failed { background: var(--st-noshow); }
+.gline { padding: 6px 0; border-top: 1px solid var(--line); }
+.gsteps { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.gsteps li.done { color: var(--muted); text-decoration: line-through; }
+tr.gnow td { background: var(--accent-soft); }
+
+/* Product map */
+.gmods { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+.gmod { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--card); display: grid; gap: 6px; align-content: start; }
+.gmod h3 { margin: 0; font-size: 1rem; color: var(--text); text-transform: none; letter-spacing: 0; }
+.gmod ul { margin: 0; padding-left: 18px; font-size: 0.9rem; display: grid; gap: 2px; }
+.gmod p { margin: 0; }

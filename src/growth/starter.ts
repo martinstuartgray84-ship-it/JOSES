@@ -410,3 +410,20 @@ export const OBJECTIONS: [string, string][] = [
 ];
 
 export const TURNAWAY_REASONS = ["Fully booked", "No table for that party size", "Wait too long", "Kitchen closed", "Bar full", "Other"];
+
+/** The first 30 days at the first site, from the programme pack. */
+export const FIRST_30_DAYS: { week: string; from: string; to: string; dates: string; focus: string; doneWhen: string }[] = [
+  { week: "Week 1", from: "2026-11-21", to: "2026-11-27", dates: "21 to 27 Nov", focus: "Mobilise: owners, data requests, logs, board", doneWhen: "Week-one actions ticked or dated" },
+  { week: "Week 2", from: "2026-11-28", to: "2026-12-04", dates: "28 Nov to 4 Dec", focus: "Baseline: data loaded and checked; tests start", doneWhen: "Real numbers in the baseline; three tests live" },
+  { week: "Week 3", from: "2026-12-05", to: "2026-12-11", dates: "5 to 11 Dec", focus: "Run: first weekly review and huddle; licence and lease read", doneWhen: "Two meetings held; licence position written" },
+  { week: "Week 4", from: "2026-12-12", to: "2026-12-18", dates: "12 to 18 Dec", focus: "Read: first results; charters drafted; January plan", doneWhen: "First gain banked or stopped" },
+  { week: "Day 30", from: "2026-12-19", to: "2026-12-20", dates: "20 Dec", focus: "Owner checkpoint", doneWhen: "Exit tests met" },
+];
+export const EXIT_TESTS = [
+  "12 months of real data reconciled to the accounts within 2%", "A one-page baseline", "Licence, lease and capacity on one page",
+  "Three tests read", "Weekly meetings held three weeks running", "Bridge rebuilt on real numbers",
+];
+export const SIX_RULES = [
+  "If we can't measure it, we don't claim it.", "One change at a time.", "The guest comes first. Every test has a guest guardrail.",
+  "Anyone can propose, everyone hears the result.", "No blame for a failed test.", "Bank it: written into how we work and still holding after 90 days.",
+];

@@ -9,7 +9,7 @@ import GrowthNav from "../GrowthNav";
 import "../../dashboard/dashboard.css";
 import "../growth.css";
 
-export const metadata: Metadata = { title: "Growth", robots: { index: false } };
+export const metadata: Metadata = { title: "Growth programme", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 const day = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
@@ -23,8 +23,7 @@ export default async function GrowthLayout({ children, params }: { children: Rea
   return (
     <main className="page dash growth">
       <div className="gtop">
-        <strong>Growth</strong>
-        <span className="muted">{site.name}</span>
+        <strong>{site.name}</strong>
         {status.checks === 0 ? (
           <Link className="chip warn" href={`/growth/${slug}/data`}>No data loaded</Link>
         ) : status.sample ? (
