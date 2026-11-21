@@ -132,6 +132,6 @@ export async function isStaff(): Promise<boolean> {
 }
 
 /** Call at the top of every staff page and server action. */
-export async function requireStaff(next = "/diary"): Promise<void> {
+export async function requireStaff(next = "/growth"): Promise<void> {
   if (!(await isStaff())) redirect(`/staff/login?next=${encodeURIComponent(next)}`);
 }

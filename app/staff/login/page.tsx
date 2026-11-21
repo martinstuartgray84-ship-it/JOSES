@@ -7,7 +7,7 @@ import { checkStaffPassword, loginBlocked, recordLoginFailure, startStaffSession
 export const metadata: Metadata = { title: "Staff sign in", robots: { index: false } };
 
 /** Only same-site paths, so the login can't be used to bounce people elsewhere. */
-const safeNext = (n: unknown) => (typeof n === "string" && /^\/(?!\/)[\w\-/?=&.%]*$/.test(n) ? n : "/diary");
+const safeNext = (n: unknown) => (typeof n === "string" && /^\/(?!\/)[\w\-/?=&.%]*$/.test(n) ? n : "/growth");
 
 async function signIn(formData: FormData) {
   "use server";

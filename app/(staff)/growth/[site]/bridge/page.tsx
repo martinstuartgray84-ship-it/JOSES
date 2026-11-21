@@ -14,7 +14,7 @@ export default async function BridgePage({ params, searchParams }: { params: Pro
   const initial = { ...defaults, ...(saved ?? {}) };
   return (
     <>
-      <Head title="Bridge">Change any assumption and the path from today&rsquo;s sales to the target redraws. Saved for this site.</Head>
+      <Head title="Revenue model">The model of how this site gets from today&rsquo;s sales to the target: what each move is assumed to add. Change any assumption and the path redraws. Replace assumptions with measured results as tests and pilots report.</Head>
       <BridgeEditor
         key={JSON.stringify(initial)}
         slug={slug}
