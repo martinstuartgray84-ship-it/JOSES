@@ -5,6 +5,7 @@ import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { dayFromIso, heat, isoDay, menu, period, servers, summary, tiles, weekOf } from "../growth/engine";
 import { clearData, dataStatus, getSettings, importChunk, importFile, finishImport, listImports, loadModel, loadSample, loadStored, saveSettings, savedMappings, startImport } from "./growth";
+import { addAction, listActions, listBets, listDecisions, listMeetings, loadStarter, logTurnaway, saveBet, saveDecision, saveMeeting, setActionStatus, turnawayTally } from "./growth-office";
 import { addIdea, buildScorecard, createTest, decideTest, emailScorecard, listEvents, listScorecards, markRead, programme, recheckGain, runScorecards, saveBridge, getBridge, saveEnquiry, listEnquiries, saveEvent, startTest } from "./growth-programme";
 
 const url = process.env.DATABASE_URL;
@@ -205,5 +206,53 @@ describe.skipIf(!url)("Growth Console", () => {
     const p = await programme(sql, venue);
     expect(p.gains).toHaveLength(1);
     expect(p.hasData).toBe(false);
+  });
+
+  it("loads the starter pack once, and runs the plan, bets, meetings and turn-aways", async () => {
+    expect(await loadStarter(sql, other)).toEqual({ actions: 36, decisions: 9, ideas: 7, bets: 6 });
+    expect(await loadStarter(sql, other)).toEqual({ actions: 0, decisions: 0, ideas: 0, bets: 0 });
+    const p = await programme(sql, other);
+    expect(p.ideas[0]!.change).toMatch(/^First drink in two minutes/);
+    expect(p.ideas.map((i) => i.metricKey)).toEqual(["dpc", "dpc", "starterAttach", "dessertAttach", "turn", "noShow", "lateSalesPerWeek"]);
+
+    let actions = await listActions(sql, other);
+    expect(actions).toHaveLength(36);
+    expect(actions.every((a) => a.status === "open")).toBe(true);
+    const a1 = actions.find((a) => a.ref === "A01")!;
+    await setActionStatus(sql, other, a1.id, "done");
+    await addAction(sql, other, { task: "Order handhelds", owner: "General manager", due: "2099-01-05" });
+    await expect(addAction(sql, other, { task: "No owner" })).rejects.toThrow(/owner/);
+    actions = await listActions(sql, other);
+    expect(actions.find((a) => a.ref === "A01")).toMatchObject({ status: "done", overdue: false });
+    expect(actions.find((a) => a.task === "Order handhelds")).toMatchObject({ overdue: false, ref: null });
+    await setActionStatus(sql, venue, a1.id, "open"); // another venue cannot touch it
+    expect((await listActions(sql, other)).find((a) => a.ref === "A01")!.status).toBe("done");
+
+    const d = (await listDecisions(sql, other))[0]!;
+    await saveDecision(sql, other, { id: d.id, decision: "Tres Veces", decidedBy: "Owner" });
+    expect((await listDecisions(sql, other))[0]).toMatchObject({ item: "Programme name", decision: "Tres Veces", decidedBy: "Owner" });
+
+    const bets = await listBets(sql, other);
+    expect(bets.map((b) => [b.name, b.status, b.passed])[0]).toEqual(["Late-night bar", "active", 0]);
+    const late = bets[0]!;
+    const form = (g: string[]) => ({ id: late.id, name: late.name, yearlyValue: "375,000", status: "active", gate_test_0: "Licence", gate_status_0: g[0], gate_test_1: "Pilots", gate_status_1: g[1], gate_test_2: "Scale", gate_status_2: g[2] });
+    await expect(saveBet(sql, other, form(["pending", "passed", "pending"]))).rejects.toThrow(/gates before it/);
+    await saveBet(sql, other, form(["passed", "failed", "pending"]));
+    const after = (await listBets(sql, other))[0]!;
+    expect([after.passed, after.yearlyValue, after.gates[1]!.status, after.gates[0]!.decided_on]).toEqual([1, 375000, "failed", expect.stringMatching(/^\d{4}-/)]);
+
+    await saveMeeting(sql, other, { kind: "mobilisation", heldOn: "2026-11-21", notes: "DECISIONS\nThree tests agreed." });
+    expect((await listMeetings(sql, other))[0]).toMatchObject({ title: "Mobilisation", heldOn: "2026-11-21" });
+    await expect(saveMeeting(sql, other, { kind: "party", heldOn: "2026-11-21" })).rejects.toThrow(/kind/);
+
+    const [now] = await sql`select to_char(now() at time zone 'Europe/London', 'YYYY-MM-DD"T"HH24:MI') as t`;
+    await logTurnaway(sql, other, { turnedAt: now!.t, partySize: "4", reason: "Fully booked", offeredAlternative: "Bar seats" });
+    await logTurnaway(sql, other, { turnedAt: now!.t, partySize: 2, reason: "Fully booked" });
+    await logTurnaway(sql, other, { turnedAt: "2020-01-01T20:00", partySize: 6, reason: "Kitchen closed" }); // outside the 28 days
+    await expect(logTurnaway(sql, other, { turnedAt: now!.t, partySize: 0, reason: "x" })).rejects.toThrow(/Party size/);
+    const t = await turnawayTally(sql, other);
+    expect([t.parties, t.guests, t.recent.length]).toEqual([2, 6, 3]);
+    expect(t.byReason).toEqual([{ reason: "Fully booked", parties: 2, guests: 6 }]);
+    expect((await turnawayTally(sql, venue)).recent).toEqual([]);
   });
 });

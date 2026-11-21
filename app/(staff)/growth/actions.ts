@@ -9,6 +9,7 @@ import {
   saveEvent, setIdeaStatus, startTest,
 } from "@/src/server/growth-programme";
 import type { FileKind } from "@/src/growth/engine";
+import { addAction, deleteMeeting, deleteTurnaway, editAction, loadStarter, logTurnaway, saveBet, saveDecision, saveMeeting, setActionStatus } from "@/src/server/growth-office";
 
 // Every action re-checks the staff session and that the site belongs to this company.
 async function venue(slug: string) {
@@ -181,6 +182,81 @@ export async function deleteEventAction(slug: string, eventId: string): Promise<
   return act(async () => {
     const v = await venue(slug);
     await deleteEvent(v.sql, v.id, eventId);
+    done(slug);
+  });
+}
+
+// --- programme office ---
+
+
+export async function loadStarterAction(slug: string): Promise<ActionResult<string>> {
+  return act(async () => {
+    const v = await venue(slug);
+    const n = await loadStarter(v.sql, v.id);
+    done(slug);
+    return `Added ${n.actions} actions, ${n.decisions} decisions, ${n.ideas} ideas and ${n.bets} bet charters.`;
+  });
+}
+export async function addActionAction(slug: string, fd: FormData): Promise<ActionResult<void>> {
+  return act(async () => {
+    const v = await venue(slug);
+    await addAction(v.sql, v.id, fields(fd));
+    done(slug);
+  });
+}
+export async function actionStatusAction(slug: string, actionId: string, status: "open" | "done" | "dropped"): Promise<ActionResult<void>> {
+  return act(async () => {
+    const v = await venue(slug);
+    await setActionStatus(v.sql, v.id, actionId, status);
+    done(slug);
+  });
+}
+export async function editActionAction(slug: string, actionId: string, fd: FormData): Promise<ActionResult<void>> {
+  return act(async () => {
+    const v = await venue(slug);
+    await editAction(v.sql, v.id, actionId, fields(fd));
+    done(slug);
+  });
+}
+export async function saveDecisionAction(slug: string, fd: FormData): Promise<ActionResult<void>> {
+  return act(async () => {
+    const v = await venue(slug);
+    await saveDecision(v.sql, v.id, fields(fd));
+    done(slug);
+  });
+}
+export async function saveBetAction(slug: string, fd: FormData): Promise<ActionResult<void>> {
+  return act(async () => {
+    const v = await venue(slug);
+    await saveBet(v.sql, v.id, fields(fd));
+    done(slug);
+  });
+}
+export async function saveMeetingAction(slug: string, fd: FormData): Promise<ActionResult<void>> {
+  return act(async () => {
+    const v = await venue(slug);
+    await saveMeeting(v.sql, v.id, fields(fd));
+    done(slug);
+  });
+}
+export async function deleteMeetingAction(slug: string, meetingId: string): Promise<ActionResult<void>> {
+  return act(async () => {
+    const v = await venue(slug);
+    await deleteMeeting(v.sql, v.id, meetingId);
+    done(slug);
+  });
+}
+export async function logTurnawayAction(slug: string, fd: FormData): Promise<ActionResult<void>> {
+  return act(async () => {
+    const v = await venue(slug);
+    await logTurnaway(v.sql, v.id, fields(fd));
+    done(slug);
+  });
+}
+export async function deleteTurnawayAction(slug: string, turnawayId: string): Promise<ActionResult<void>> {
+  return act(async () => {
+    const v = await venue(slug);
+    await deleteTurnaway(v.sql, v.id, turnawayId);
     done(slug);
   });
 }

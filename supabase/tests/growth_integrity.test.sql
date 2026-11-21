@@ -33,13 +33,19 @@ begin
     insert into growth_scorecards (venue_id, week_start, payload) values (v, '2026-11-09', '{}');
     insert into growth_enquiries (venue_id, received_at) values (v, '2026-11-14 10:00') returning id into enq;
     insert into growth_events (venue_id, enquiry_id, name, held_on) values (v, enq, 'Hire', '2026-12-01');
+    insert into growth_actions (venue_id, ref, owner, task) values (v, 'A01', 'Owner', 'Find the licence');
+    insert into growth_decisions (venue_id, item) values (v, 'Programme name');
+    insert into growth_bets (venue_id, name) values (v, 'Late-night bar');
+    insert into growth_meetings (venue_id, kind, held_on, title) values (v, 'huddle', '2026-11-21', 'Huddle');
+    insert into growth_turnaways (venue_id, turned_at, party_size, reason) values (v, '2026-11-14 20:00', 4, 'Full');
   end loop;
 end $$;
 
 create function pg_temp.growth_tables() returns text[] language sql as $$
   select array['growth_settings', 'growth_column_maps', 'growth_imports', 'growth_checks', 'growth_items', 'growth_bookings',
     'growth_metric_day', 'growth_metric_hour', 'growth_ideas', 'growth_tests', 'growth_gains', 'growth_bridge',
-    'growth_scorecards', 'growth_enquiries', 'growth_events'];
+    'growth_scorecards', 'growth_enquiries', 'growth_events', 'growth_actions', 'growth_decisions', 'growth_bets',
+    'growth_meetings', 'growth_turnaways'];
 $$;
 
 -- Every growth table must have row-level security switched on.
@@ -100,6 +106,16 @@ do $$ declare n int; begin
   update growth_tests set status = 'live';
   get diagnostics n = row_count;
   if n <> 0 then raise exception 'captain should not change tests'; end if;
+  insert into growth_turnaways (venue_id, turned_at, party_size, reason) values ('50000000-0000-0000-0000-00000000000a', '2026-11-14 21:00', 2, 'Full');
+  update growth_actions set status = 'done';
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'captain should tick actions at their own venue only, updated %', n; end if;
+  delete from growth_actions;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'captain should not delete actions'; end if;
+  update growth_bets set status = 'stopped';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'captain should not change big bets'; end if;
   begin
     insert into growth_ideas (venue_id, gain_area, change, metric_key, status) values ('50000000-0000-0000-0000-00000000000a', 'Bar', 'x', 'dpc', 'testing');
     raise exception 'captain should only add open ideas';

@@ -5,7 +5,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 const VIEWS = [
   ["", "Scoreboard"], ["/seat-hours", "Seat-hours"], ["/menu", "Menu"], ["/team", "Team"], ["/bookings", "Bookings"], ["/gains", "Gains board"],
-  ["/tests", "Tests"], ["/scorecard", "Scorecard"], ["/bridge", "Bridge"], ["/events", "Events"], ["/data", "Data"], ["/settings", "Settings"],
+  ["/tests", "Tests"], ["/scorecard", "Scorecard"], ["/plan", "Plan"], ["/bets", "Big bets"], ["/bridge", "Bridge"], ["/events", "Events"],
+  ["/turnaways", "Turn-aways"], ["/meetings", "Meetings"], ["/data", "Data"], ["/settings", "Settings"],
 ] as const;
 // Views whose figures follow the period selector.
 const PERIOD_VIEWS = new Set(["", "/seat-hours", "/menu", "/team", "/bookings", "/bridge", "/events"]);

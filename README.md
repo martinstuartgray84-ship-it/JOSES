@@ -173,6 +173,7 @@ npm run test:db    # throwaway Postgres 15+: migrations, seed, SQL tests, then b
 - **The engine is the only place a metric is computed** (`src/growth/engine`: pure functions, no I/O). `fixtures/growth/golden.json` holds expected values for the invented sample in `fixtures/growth/sample`; `npm test` asserts every one within 0.0001. If a golden test fails, fix the code, never the fixture.
 - **Time is wall-clock.** No timezone conversion; a trading day runs 05:00 to 04:59. **Money is net** of VAT and service charge.
 - **Imports are idempotent.** Rows are upserted on natural keys, so loading a file again replaces rows. Each import keeps a validation report. Stored daily and hourly summaries are rewritten for the days an import touched.
+- **Programme office:** Plan (actions and decisions), Big bets (charters with three gates), Meetings (notes from templates; the weekly review opens on the latest scorecard) and Turn-aways (the door tally). Plan → Load the starter pack adds the pack's week-one actions, decisions, first test ideas and bet charters (`src/growth/starter.ts`).
 - **Try it:** Growth → Data → Load sample data. Nothing real belongs in `fixtures/`.
 - **Scorecard:** the hourly job (`/api/cron/hourly`) builds last week's card from Monday 07:00 site time once that week's sales are loaded, and emails the addresses under Growth → Settings.
 - **Tests:** `npm test` (engine, golden), `npm run test:db` (import, programme, row-level security between organisations).

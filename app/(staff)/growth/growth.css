@@ -85,3 +85,25 @@ details.gadd[open] > summary { margin-bottom: 12px; }
 .gareas { display: grid; gap: 6px; }
 .gareas > div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 @media print { .snav, .gnav, .gtop, .noprint { display: none !important; } .page { padding: 0; } }
+
+/* Programme office */
+.gacts { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.gacts li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; }
+.gacts li.done .gtask, .gacts li.dropped .gtask { color: var(--muted); text-decoration: line-through; }
+.gtick { width: 28px; height: 28px; padding: 0; border-radius: 6px; font-weight: 700; line-height: 1; }
+.gtick[aria-pressed="true"] { background: var(--st-seated); border-color: var(--st-seated); color: var(--card); }
+.gdec { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.gdec summary { cursor: pointer; }
+.gdec .gform { margin-top: 10px; }
+.ggates { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 8px; }
+.ggates li { padding-left: 12px; border-left: 3px solid var(--line); }
+.ggates li.passed { border-left-color: var(--st-seated); }
+.ggates li.failed { border-left-color: var(--st-noshow); }
+.ggate { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: start; }
+@media (max-width: 700px) { .ggate { grid-template-columns: minmax(0, 1fr); } }
+.gform textarea { min-height: 64px; resize: vertical; }
+.gnotes { min-height: 320px !important; font-family: var(--font); line-height: 1.5; }
+.gsay { display: grid; gap: 8px; margin: 10px 0 0; }
+.gsay dt { font-weight: 600; }
+.gsay dd { margin: 0; }
+details > .gform { margin-top: 10px; }
