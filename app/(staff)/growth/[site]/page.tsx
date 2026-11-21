@@ -41,9 +41,15 @@ export default async function Overview({ params, searchParams }: { params: Promi
 
   return (
     <>
-      <Head title="Growth programme">
-        Big bets on new hours, marginal gains in every hour. One site first: prove what lifts profit here, then package it for the next restaurant.
+      <Head title={`${c.site.name}: growth programme`}>
+        Big bets on new hours, marginal gains in every hour. This is the working space for the engagement: plan it, model it, prove it here. What works becomes the platform other restaurants run.
       </Head>
+      <ol className="gphases" aria-label="Where the engagement is">
+        <li className="now"><strong>1. Plan and model</strong><span>Baseline the site, build the revenue model, charter the bets, pick the first tests.</span></li>
+        <li><strong>2. Prove</strong><span>Run the tests and pilots. Bank what is measured and still holds at 90 days.</span></li>
+        <li><strong>3. Package</strong><span>Turn what worked into the playbook and the <Link href="/suite">platform</Link>.</span></li>
+        <li><strong>4. Sell</strong><span>Offer the platform and the method to other restaurants.</span></li>
+      </ol>
 
       {(!m || !started) && (
         <section className="box gwarn">
@@ -78,7 +84,7 @@ export default async function Overview({ params, searchParams }: { params: Promi
             <span><i className="banked" /> Banked and measured: <strong>{fmt("money0", p.total)}</strong></span>
             <span><i className="planned" /> In the plan, not yet proven: <strong>{moneyK(Math.max(plan.total - baseSales - p.total, 0))}</strong></span>
             <span><i className="gap" /> Still to find: <strong>{moneyK(Math.max(plan.gap, 0))}</strong></span>
-            <Link href={`${base}/bridge`}>Open the bridge</Link>
+            <Link href={`${base}/bridge`}>Open the revenue model</Link>
           </div>
         </div>
       </section>
@@ -156,6 +162,14 @@ export default async function Overview({ params, searchParams }: { params: Promi
           <p className="gnote">{open.length} open, {overdue.length} overdue{undecided.length ? `, ${undecided.length} decisions still to make` : ""}.</p>
         </section>
       </div>
+
+      <section className="box gplat">
+        <div>
+          <h2>The platform <span className="chip info">Prototype</span></h2>
+          <p style={{ margin: 0 }}>The product this engagement is building: what a restaurant runs day to day once the method is proven. Bookings, till, kitchen and bar screens, floor coaching, guests and marketing, with this programme&rsquo;s analytics and tests on top.</p>
+        </div>
+        <Link className="gbtn" href="/suite">Open the platform</Link>
+      </section>
 
       <section className="box">
         <h2>First 30 days</h2>

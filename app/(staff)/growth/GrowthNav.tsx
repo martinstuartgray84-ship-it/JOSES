@@ -7,7 +7,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 const GROUPS: { label: string; views: [string, string][] }[] = [
   { label: "", views: [["", "Overview"]] },
   { label: "Analytics", views: [["/scoreboard", "Scoreboard"], ["/seat-hours", "Seat-hours"], ["/menu", "Menu"], ["/team", "Team"], ["/bookings", "Bookings"], ["/turnaways", "Turn-aways"]] },
-  { label: "Initiatives", views: [["/bets", "Big bets"], ["/gains", "Gains board"], ["/tests", "Tests"], ["/events", "Events"], ["/bridge", "Bridge"]] },
+  { label: "The model", views: [["/bridge", "Revenue model"], ["/bets", "Big bets"]] },
+  { label: "Initiatives", views: [["/gains", "Gains board"], ["/tests", "Tests"], ["/events", "Events"]] },
   { label: "Running it", views: [["/plan", "Plan"], ["/meetings", "Meetings"], ["/scorecard", "Scorecard"]] },
   { label: "Set-up", views: [["/data", "Data"], ["/settings", "Settings"]] },
 ];

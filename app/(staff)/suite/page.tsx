@@ -6,7 +6,7 @@ import { requireStaff } from "@/src/server/staff";
 import "../dashboard/dashboard.css";
 import "../growth/growth.css";
 
-export const metadata: Metadata = { title: "Product", robots: { index: false } };
+export const metadata: Metadata = { title: "Platform", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 type Mod = { name: string; what: string; status: "Working" | "Prototype" | "Planned"; links: [string, string][] };
@@ -62,8 +62,8 @@ export default async function Suite() {
   return (
     <main className="page dash growth">
       <header className="ghead">
-        <h1>The product</h1>
-        <p className="muted">Prove the method at the first restaurant, then sell it as an application. This is the map of the full suite: what works today, what is a prototype, and what comes next.</p>
+        <h1>The platform</h1>
+        <p className="muted">What restaurants will run once the method is proven at Jose&rsquo;s. This is the prototype, built alongside the engagement: open any module to use it, and see below what works today and what comes next.</p>
       </header>
       <section className="box">
         <h2>The path</h2>

@@ -141,3 +141,12 @@ tr.gnow td { background: var(--accent-soft); }
 .gmod h3 { margin: 0; font-size: 1rem; color: var(--text); text-transform: none; letter-spacing: 0; }
 .gmod ul { margin: 0; padding-left: 18px; font-size: 0.9rem; display: grid; gap: 2px; }
 .gmod p { margin: 0; }
+
+.gphases { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 800px) { .gphases { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 440px) { .gphases { grid-template-columns: minmax(0, 1fr); } }
+.gphases li { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); border-top: 3px solid var(--line); }
+.gphases li.now { border-top-color: var(--accent); background: var(--accent-soft); }
+.gphases span { font-size: 0.85rem; color: var(--muted); }
+.gplat { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+.gplat > div { flex: 1 1 320px; }

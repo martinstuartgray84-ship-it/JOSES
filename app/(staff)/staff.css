@@ -79,3 +79,10 @@
 a.snav-brand { color: var(--text); text-decoration: none; }
 .snav-sep { align-self: center; padding: 0 6px 0 14px; margin-left: 8px; border-left: 1px solid var(--line); color: var(--muted); font-size: 0.72rem;
   text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; min-height: 18px; }
+
+/* Second bar, shown only inside the platform: the product being prototyped. */
+.pnav { display: flex; align-items: center; gap: 4px 14px; flex-wrap: wrap; padding: 4px 16px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.pnav-tag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.pnav .snav-links a { padding: 6px 10px; font-size: 0.92rem; }
+.snav select { margin-left: auto; }
+@media (max-width: 640px) { .snav-brand { display: inline !important; font-size: 0.95rem; } }
