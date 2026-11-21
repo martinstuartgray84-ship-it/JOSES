@@ -1,5 +1,5 @@
 // CSV text to rows keyed by header. Reuses the menu importer's RFC 4180 reader.
-import { parseDelimited } from "@/src/menu/import";
+import { parseDelimited } from "../menu/import";
 import type { RawRow } from "./engine";
 
 export function csvRows(text: string): { headers: string[]; rows: RawRow[] } {

@@ -76,3 +76,6 @@
 .page > * { min-width: 0; }
 .seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .seg button { white-space: nowrap; flex: none; }
+a.snav-brand { color: var(--text); text-decoration: none; }
+.snav-sep { align-self: center; padding: 0 6px 0 14px; margin-left: 8px; border-left: 1px solid var(--line); color: var(--muted); font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; min-height: 18px; }

@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
-const VIEWS = [
-  ["", "Scoreboard"], ["/seat-hours", "Seat-hours"], ["/menu", "Menu"], ["/team", "Team"], ["/bookings", "Bookings"], ["/gains", "Gains board"],
-  ["/tests", "Tests"], ["/scorecard", "Scorecard"], ["/plan", "Plan"], ["/bets", "Big bets"], ["/bridge", "Bridge"], ["/events", "Events"],
-  ["/turnaways", "Turn-aways"], ["/meetings", "Meetings"], ["/data", "Data"], ["/settings", "Settings"],
-] as const;
+// The programme, in the order it is worked: see where the money is, choose what to change, run it.
+const GROUPS: { label: string; views: [string, string][] }[] = [
+  { label: "", views: [["", "Overview"]] },
+  { label: "Analytics", views: [["/scoreboard", "Scoreboard"], ["/seat-hours", "Seat-hours"], ["/menu", "Menu"], ["/team", "Team"], ["/bookings", "Bookings"], ["/turnaways", "Turn-aways"]] },
+  { label: "Initiatives", views: [["/bets", "Big bets"], ["/gains", "Gains board"], ["/tests", "Tests"], ["/events", "Events"], ["/bridge", "Bridge"]] },
+  { label: "Running it", views: [["/plan", "Plan"], ["/meetings", "Meetings"], ["/scorecard", "Scorecard"]] },
+  { label: "Set-up", views: [["/data", "Data"], ["/settings", "Settings"]] },
+];
 // Views whose figures follow the period selector.
-const PERIOD_VIEWS = new Set(["", "/seat-hours", "/menu", "/team", "/bookings", "/bridge", "/events"]);
+const PERIOD_VIEWS = new Set(["", "/scoreboard", "/seat-hours", "/menu", "/team", "/bookings", "/bridge", "/events", "/turnaways"]);
 
 export default function GrowthNav({ slug }: { slug: string }) {
   const path = usePathname();
@@ -20,11 +23,16 @@ export default function GrowthNav({ slug }: { slug: string }) {
   const q = w === "12" ? "" : `?w=${w}`;
   return (
     <div className="gnav">
-      <nav className="gnav-links" aria-label="Growth views">
-        {VIEWS.map(([href, label]) => (
-          <Link key={href} href={`${base}${href}${q}`} aria-current={current === href ? "page" : undefined}>
-            {label}
-          </Link>
+      <nav className="gnav-links" aria-label="Programme">
+        {GROUPS.map((g) => (
+          <div key={g.label || "home"} className="gnav-group">
+            {g.label && <span className="gnav-label">{g.label}</span>}
+            {g.views.map(([href, label]) => (
+              <Link key={href} href={`${base}${href}${q}`} aria-current={current === href ? "page" : undefined}>
+                {label}
+              </Link>
+            ))}
+          </div>
         ))}
       </nav>
       {PERIOD_VIEWS.has(current) && (

@@ -14,7 +14,7 @@ It's built for one company running two sites. Each site has its own floor plan, 
 | Ops | `/ops/<site>` | Bar, kitchen and server load right now with what to change; today's covers forecast, staff per hour, kitchen prep and cocktails to batch |
 | Kitchen & bar | `/kds/<site>/<station>` | Station screens with cook-to-sync sequencing, timers, all-day counts, bump and recall; the pass |
 | Menu | `/menu/<site>` | Edit items, prices, GP%, allergens, routing, prep times; 86 and stock per site; spreadsheet import |
-| Growth | `/growth/<site>` | Load till and booking exports; scoreboard, seat-hours, menu, team and bookings views; ideas, tests and banked gains; weekly scorecard; bridge; events |
+| Programme | `/growth/<site>` (the front door: `/` goes here) | Load till and booking exports; scoreboard, seat-hours, menu, team and bookings views; ideas, tests and banked gains; weekly scorecard; bridge; events |
 | Dashboard | `/dashboard` | Sales, covers, spend per head, service speed, slow dishes, menu engineering, busy times, bookings, guests, team |
 | Guests | `/guests` | Every guest with visits and spend; segments; full profile with favourites, history, allergies, consent |
 | Marketing | `/marketing` | Campaigns to segments with live preview and test send; win-back, thank-you and birthday automations; results by return visits |
@@ -180,6 +180,6 @@ npm run test:db    # throwaway Postgres 15+: migrations, seed, SQL tests, then b
 
 ## Demo mode
 
-With no `DATABASE_URL`, the app runs on a Postgres inside the server process (PGlite, `src/server/demo.ts`). On first request it applies every migration, the seed, four weeks of invented trading history and the Growth sample data and starter pack, in a few seconds. Staff screens are open without a password and every page carries a demo banner.
+With no `DATABASE_URL`, the app runs on a Postgres inside the server process (PGlite, `src/server/demo.ts`). `npm run build` first builds a snapshot of it (`scripts/build-demo-db.ts`: schema, seed, Growth sample, starter pack and three example tests); at start-up the server loads the snapshot and adds four weeks of invented trading history, in a few seconds. Staff screens are open without a password and every page carries a demo banner.
 
 It is for looking around, not for trading: the database is rebuilt on every restart, and on serverless hosting each instance has its own copy, so changes can disappear between requests. Setting `DATABASE_URL` (with `STAFF_PASSWORD` and `STAFF_SESSION_SECRET`) switches to the real database and turns the sign-in back on. The whole database test suite passes against the embedded database.

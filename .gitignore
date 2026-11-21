@@ -6,3 +6,4 @@ node_modules/
 .localdb/
 next-env.d.ts
 *.tsbuildinfo
+.demo/

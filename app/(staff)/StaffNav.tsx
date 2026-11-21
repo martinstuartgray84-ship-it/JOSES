@@ -3,19 +3,18 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+// The programme leads. The operating suite is the product being built around it.
 // Sections that are per site: /<section>/<site>/...
-const SITE_SECTIONS = [
+const SUITE_SITE = [
   { key: "diary", label: "Diary" },
   { key: "pos", label: "Till" },
   { key: "floor", label: "Floor" },
   { key: "ops", label: "Ops" },
   { key: "kds", label: "Kitchen & bar" },
   { key: "menu", label: "Menu" },
-  { key: "growth", label: "Growth" },
 ] as const;
-
 // Company-wide sections.
-const COMPANY_SECTIONS = [
+const SUITE_COMPANY = [
   { key: "dashboard", label: "Dashboard" },
   { key: "guests", label: "Guests" },
   { key: "marketing", label: "Marketing" },
@@ -26,18 +25,18 @@ export default function StaffNav({ sites }: { sites: { slug: string; name: strin
   const router = useRouter();
   const [, section, maybeSite] = path.split("/");
   const site = sites.find((s) => s.slug === maybeSite)?.slug ?? sites[0]?.slug ?? "";
-  const siteSection = SITE_SECTIONS.some((s) => s.key === section);
+  const siteSection = section === "growth" || SUITE_SITE.some((s) => s.key === section);
 
   return (
-    <nav className="snav" aria-label="Staff">
-      <span className="snav-brand">Jose&rsquo;s</span>
+    <nav className="snav" aria-label="Main">
+      <Link href={`/growth/${site}`} className="snav-brand">Growth programme</Link>
       {sites.length > 1 && (
         <select
           aria-label="Site"
           value={site}
           onChange={(e) => {
             const next = e.target.value;
-            router.push(siteSection ? `/${section}/${next}` : `/diary/${next}`);
+            router.push(siteSection ? `/${section}/${next}` : `/growth/${next}`);
           }}
         >
           {sites.map((s) => (
@@ -48,16 +47,20 @@ export default function StaffNav({ sites }: { sites: { slug: string; name: strin
         </select>
       )}
       <div className="snav-links">
-        {SITE_SECTIONS.map((s) => (
+        <Link href={`/growth/${site}`} className={section === "growth" ? "on" : ""}>Programme</Link>
+        <span className="snav-sep">Operating suite</span>
+        {SUITE_SITE.map((s) => (
           <Link key={s.key} href={`/${s.key}/${site}`} className={section === s.key ? "on" : ""}>
             {s.label}
           </Link>
         ))}
-        {COMPANY_SECTIONS.map((s) => (
+        {SUITE_COMPANY.map((s) => (
           <Link key={s.key} href={`/${s.key}`} className={section === s.key ? "on" : ""}>
             {s.label}
           </Link>
         ))}
+        <span className="snav-sep" aria-hidden="true" />
+        <Link href="/suite" className={section === "suite" ? "on" : ""}>Product</Link>
       </div>
     </nav>
   );
