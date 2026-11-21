@@ -14,6 +14,7 @@ It's built for one company running two sites. Each site has its own floor plan, 
 | Ops | `/ops/<site>` | Bar, kitchen and server load right now with what to change; today's covers forecast, staff per hour, kitchen prep and cocktails to batch |
 | Kitchen & bar | `/kds/<site>/<station>` | Station screens with cook-to-sync sequencing, timers, all-day counts, bump and recall; the pass |
 | Menu | `/menu/<site>` | Edit items, prices, GP%, allergens, routing, prep times; 86 and stock per site; spreadsheet import |
+| Growth | `/growth/<site>` | Load till and booking exports; scoreboard, seat-hours, menu, team and bookings views; ideas, tests and banked gains; weekly scorecard; bridge; events |
 | Dashboard | `/dashboard` | Sales, covers, spend per head, service speed, slow dishes, menu engineering, busy times, bookings, guests, team |
 | Guests | `/guests` | Every guest with visits and spend; segments; full profile with favourites, history, allergies, consent |
 | Marketing | `/marketing` | Campaigns to segments with live preview and test send; win-back, thank-you and birthday automations; results by return visits |
@@ -27,6 +28,7 @@ It's built for one company running two sites. Each site has its own floor plan, 
 | Kitchen sequencing (cook to sync) | `src/kitchen/sequencing.ts` |
 | Menu import parser | `src/menu/import.ts` |
 | Segments and email templates | `src/marketing` |
+| Growth metrics engine (golden-tested) | `src/growth/engine` |
 | Server services | `src/server/*.ts` (bookings, diary, menu, orders, kitchen, analytics, crm, marketing) |
 | Schema | `supabase/migrations` |
 | Seed and demo history | `supabase/seed.sql`, `supabase/demo/history.sql` |
@@ -163,3 +165,14 @@ npm run test:db    # throwaway Postgres 15+: migrations, seed, SQL tests, then b
 7. ~~Guest CRM and marketing~~
 8. ~~Booking emails, walk-ins and phone bookings~~
 9. Next: per-person logins (Supabase Auth); settings screens for services, tables and stations; card terminals (Stripe Terminal or Dojo); deposits and card holds; receipt printing; realtime instead of polling
+
+## Growth Console
+
+"Big bets on new hours, marginal gains in every hour." A manager loads three CSV exports (checks, items, bookings) and the team gets a saved scoreboard, a gains board and a weekly scorecard. Spec, method, definitions and data contract are in [docs/growth](docs/growth); the build status and what differs from the original plan are at the top of [docs/growth/BUILD_PLAN.md](docs/growth/BUILD_PLAN.md).
+
+- **The engine is the only place a metric is computed** (`src/growth/engine`: pure functions, no I/O). `fixtures/growth/golden.json` holds expected values for the invented sample in `fixtures/growth/sample`; `npm test` asserts every one within 0.0001. If a golden test fails, fix the code, never the fixture.
+- **Time is wall-clock.** No timezone conversion; a trading day runs 05:00 to 04:59. **Money is net** of VAT and service charge.
+- **Imports are idempotent.** Rows are upserted on natural keys, so loading a file again replaces rows. Each import keeps a validation report. Stored daily and hourly summaries are rewritten for the days an import touched.
+- **Try it:** Growth → Data → Load sample data. Nothing real belongs in `fixtures/`.
+- **Scorecard:** the hourly job (`/api/cron/hourly`) builds last week's card from Monday 07:00 site time once that week's sales are loaded, and emails the addresses under Growth → Settings.
+- **Tests:** `npm test` (engine, golden), `npm run test:db` (import, programme, row-level security between organisations).

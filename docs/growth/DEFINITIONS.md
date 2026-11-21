@@ -53,3 +53,21 @@ Baseline = up to six weeks before the start date, not earlier than the first dat
 
 Net gain = revenue − cost of goods − extra labour − direct costs − (normal net sales displaced × contribution rate).
 Minimum spend for a slot = normal net sales for that slot × (1 + premium).
+
+## Tests
+
+- **Before and after:** as above, with the after period ending at the test's end date when it has one.
+- **Alternate weeks:** counting weeks from the start date, the first, third, fifth... are on-weeks and the rest off-weeks. Change = (on-weeks − off-weeks) ÷ off-weeks, inside the test dates only.
+- **Split by section:** over the test dates, checks at the listed tables against checks at every other table. Booking figures cannot be split by table and read as no data.
+- **Verdict:** too early under two weeks of test data; wrong direction if the change is against the metric's better direction; pass mark met if the change is at least the pass mark; otherwise moving, below pass mark.
+- **Guardrail:** breached when the guardrail metric moves in its worse direction by more than 2%.
+- **Yearly value, first estimate:** uses the last 12 weeks for volumes. Sales per week and late sales per week: change × 52. Spend per head: change × covers per week × 52. Drinks per cover: change × covers per week × 52 × average drink price. Covers per week: change × spend per head × 52. No estimate for other metrics. The manager can overwrite it.
+- **Banked total:** sum of yearly values of banked gains, leaving out any that failed the 90-day re-check.
+
+## Weekly scorecard
+
+The nine scoreboard tiles for one trading week, Monday to Sunday, each against the week before and against the four weeks before taken together.
+
+## Minimum spend slots
+
+Lunch and afternoon: trading hours before 17. Dinner: 17 to before 22. Late: 22 onward. Whole day: all of them. Normal net sales for a slot = mean sales on that weekday in those hours over the selected period.

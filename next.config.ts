@@ -5,6 +5,8 @@ import type { NextConfig } from "next";
 const embedOrigins = process.env.EMBED_ORIGINS ?? "";
 
 const nextConfig: NextConfig = {
+  // The Growth sample data is read from disk when a manager loads it.
+  outputFileTracingIncludes: { "/growth/[site]/data": ["./fixtures/growth/sample/*.csv"] },
   async headers() {
     return [
       {

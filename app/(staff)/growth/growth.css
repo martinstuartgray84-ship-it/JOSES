@@ -1,0 +1,87 @@
+/* Growth Console. Builds on the staff shell and the dashboard's chart tokens (.dash). */
+.growth { gap: 16px; }
+.growth h2 { margin: 0 0 10px; font-size: 1.05rem; }
+.ghead h1 { margin: 0; font-size: 1.4rem; }
+.ghead p { margin: 4px 0 0; max-width: 72ch; }
+.gtop { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.gtop strong { font-size: 1.05rem; }
+
+.gnav { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.gnav-links { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; min-width: 0; border-bottom: 1px solid var(--line); flex: 1 1 auto; }
+.gnav-links a { padding: 8px 12px; text-decoration: none; color: var(--muted); font-weight: 600; white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.gnav-links a:hover { color: var(--text); }
+.gnav-links a[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+.growth .seg a { padding: 7px 14px; text-decoration: none; color: var(--text); white-space: nowrap; font-size: 0.92rem; }
+.growth .seg a[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+
+.gtiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.gtiles .chip { align-self: flex-start; margin-top: 4px; }
+.gcols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: 16px; }
+.gcols > * { min-width: 0; }
+.gbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.gbar h2 { margin: 0; }
+
+.gflags { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.gflags li { padding-left: 14px; border-left: 3px solid var(--line); }
+.gflags li.hot { border-left-color: var(--st-noshow); }
+.gflags li.ok { border-left-color: var(--st-seated); }
+
+.gheat { border-collapse: separate; border-spacing: 2px; width: 100%; font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+.gheat th { color: var(--muted); font-weight: 500; padding: 2px 4px; white-space: nowrap; }
+.gheat th[scope="row"] { text-align: left; }
+.gheat td { text-align: center; padding: 6px 4px; border-radius: 4px; min-width: 44px;
+  background: color-mix(in srgb, var(--series-1) var(--p, 0%), var(--viz-empty)); }
+.gheat td.hi { color: #fff; }
+.gheat td.off { background: transparent; color: var(--muted); }
+.gheat thead td { background: transparent; }
+
+.gbtn { display: inline-block; font: inherit; cursor: pointer; border-radius: 8px; padding: 9px 14px; border: 1px solid var(--line); background: var(--card); color: var(--text); text-decoration: none; font-weight: 600; }
+.gbtn.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.growth button.small, .gbtn.small { padding: 5px 10px; font-size: 0.85rem; }
+.af { display: contents; }
+.gform input, .gform select { min-width: 0; }
+.gform { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; align-items: end; }
+.gform .wide, .gform > .error, .gform > .hint { grid-column: 1 / -1; }
+.gform + .error, .gform + .hint, form > .error, form > .hint { margin-top: 8px; }
+.ginline { display: inline; }
+.ginline .af { display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.gempty p { margin: 0 0 10px; }
+.gnote { margin: 10px 0 0; font-size: 0.85rem; color: var(--muted); }
+.gwarn { border-left: 4px solid var(--st-pending); }
+.gbarcell { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.gbarcell i { display: inline-block; height: 8px; border-radius: 2px; background: var(--series-1); }
+
+/* Gains board: three columns that stack on a phone. */
+.gboard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .gboard { grid-template-columns: minmax(0, 1fr); } }
+.gcol { display: grid; gap: 10px; }
+.gcol > h2 { display: flex; align-items: center; gap: 8px; }
+.gcard { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; }
+.gcard h3 { margin: 0; font-size: 1rem; color: var(--text); text-transform: none; letter-spacing: 0; font-weight: 650; }
+.gcard p { margin: 0; }
+.gcard dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 2px 10px; font-size: 0.88rem; }
+.gcard dt { color: var(--muted); }
+.gcard dd { margin: 0; }
+.gread { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.gread span { display: grid; font-size: 0.8rem; color: var(--muted); }
+.gread b { font-size: 1.15rem; color: var(--text); font-variant-numeric: tabular-nums; }
+.gtotal { font-size: 2.2rem; font-weight: 650; letter-spacing: -0.02em; line-height: 1.1; }
+details.gadd > summary { cursor: pointer; font-weight: 600; list-style: none; }
+details.gadd > summary::-webkit-details-marker { display: none; }
+details.gadd[open] > summary { margin-bottom: 12px; }
+.gquick { display: grid; gap: 10px; }
+.gquick textarea { min-height: 64px; resize: vertical; }
+
+.gwater text { font-size: 12px; }
+.gmap { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.gmap small { font-weight: 400; color: var(--muted); }
+.gprog { height: 8px; border-radius: 4px; background: var(--viz-empty); overflow: hidden; }
+.gprog i { display: block; height: 100%; background: var(--series-1); transition: width 0.2s; }
+.gpre { margin: 0; padding: 10px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); font-size: 0.8rem; overflow-x: auto; }
+.gdays { display: grid; gap: 6px; }
+.gdays > div { display: grid; grid-template-columns: 36px auto minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: center; }
+.gdays input[type="time"] { padding: 6px 4px; min-width: 0; }
+.gareas input { min-width: 0; }
+.gareas { display: grid; gap: 6px; }
+.gareas > div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media print { .snav, .gnav, .gtop, .noprint { display: none !important; } .page { padding: 0; } }
