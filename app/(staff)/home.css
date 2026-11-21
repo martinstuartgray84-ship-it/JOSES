@@ -1,0 +1,24 @@
+/* The front page: two doors. */
+.home { max-width: 1100px; }
+.home-head { padding: 12px 0 4px; }
+.home-kicker { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.home-head h1 { margin: 2px 0 6px; font-size: clamp(2rem, 6vw, 3rem); letter-spacing: -0.02em; line-height: 1.05; }
+.home-lead { margin: 0; max-width: 62ch; font-size: 1.05rem; color: var(--muted); }
+.home-today { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; border-left: 4px solid var(--accent); }
+.home-today > div:first-child { flex: 1 1 320px; }
+.home-today h2, .home-today p { margin: 0; }
+.home-today p { color: var(--muted); margin-top: 4px; }
+.home-doors { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; align-items: stretch; }
+.home-door { display: flex; flex-direction: column; gap: 10px; padding: 20px; border-top: 4px solid var(--side); }
+.home-door.prog { --side: var(--accent); }
+.home-door.prod { --side: var(--series-1); }
+.home-door h2 { margin: 0; font-size: 1.5rem; }
+.home-door p { margin: 0; }
+.home-tag { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: var(--side); }
+.home-door .btn-row { margin-top: auto; padding-top: 6px; }
+.home-stats { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; }
+.home-stats dt { font-size: 0.8rem; color: var(--muted); }
+.home-stats dd { margin: 0; font-size: 1.35rem; font-weight: 650; }
+.home-stats dd span { font-size: 0.8rem; font-weight: 500; color: var(--muted); }
+.home-mods { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; }
+.home-note { margin: 0; max-width: 80ch; }

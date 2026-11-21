@@ -150,3 +150,9 @@ tr.gnow td { background: var(--accent-soft); }
 .gphases span { font-size: 0.85rem; color: var(--muted); }
 .gplat { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
 .gplat > div { flex: 1 1 320px; }
+
+/* Programme navigation: tabs on a wide screen, one menu on a phone. */
+.gnav-menu { display: none; flex: 1 1 100%; }
+.gnav-menu select { font-weight: 600; }
+.growth .seg a[aria-current="true"] { background: var(--text); color: var(--bg); }
+@media (max-width: 760px) { .gnav-menu { display: block; } .gnav-links { display: none; } }

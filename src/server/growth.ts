@@ -13,6 +13,25 @@ import {
 type Db = Sql | TransactionSql;
 const EPOCH = "1970-01-01";
 
+// --- sites -----------------------------------------------------------------
+
+export interface ProgrammeSite {
+  id: string;
+  slug: string;
+  name: string;
+}
+/**
+ * The company's sites with the programme's site first. The programme runs at
+ * one site, the first one set up; the order must not change when a site is
+ * renamed, so it never sorts by name.
+ */
+export async function programmeSites(sql: Db, companySlug?: string): Promise<ProgrammeSite[]> {
+  return sql<ProgrammeSite[]>`
+    select v.id, v.slug, v.name from venues v join companies c on c.id = v.company_id
+    where ${companySlug ?? null}::text is null or c.slug = ${companySlug ?? null}
+    order by v.created_at, v.slug`;
+}
+
 // --- settings --------------------------------------------------------------
 
 export const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
@@ -20,6 +39,8 @@ export const GAIN_AREAS = ["Welcome and bookings", "Floor service", "Bar", "Kitc
 export type ServerRole = "owner" | "manager" | "host";
 
 export interface GrowthSettings {
+  /** The programme's name, chosen by the team. */
+  programmeName: string;
   seats: number;
   barSeats: number | null;
   /** Per day: [open, close] as "HH:MM", or null when closed. */
@@ -35,9 +56,10 @@ export async function getSettings(sql: Db, venueId: string): Promise<GrowthSetti
             values (${venueId}, ${JSON.stringify(GAIN_AREAS.map((name) => ({ name, captain: "" })))}::text::jsonb)
             on conflict (venue_id) do nothing`;
   const [r] = await sql`
-    select seats, bar_seats, trading_hours, server_figures_min_role, gain_areas, scorecard_emails, data_version
+    select programme_name, seats, bar_seats, trading_hours, server_figures_min_role, gain_areas, scorecard_emails, data_version
     from growth_settings where venue_id = ${venueId}`;
   return {
+    programmeName: r!.programme_name,
     seats: r!.seats, barSeats: r!.bar_seats, tradingHours: r!.trading_hours, serverFiguresMinRole: r!.server_figures_min_role,
     gainAreas: r!.gain_areas, scorecardEmails: r!.scorecard_emails, dataVersion: r!.data_version,
   };
@@ -46,7 +68,11 @@ export async function getSettings(sql: Db, venueId: string): Promise<GrowthSetti
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export async function saveSettings(sql: Db, venueId: string, input: Omit<GrowthSettings, "dataVersion">): Promise<void> {
+export async function saveSettings(sql: Db, venueId: string, input: Omit<GrowthSettings, "dataVersion"> & { siteName?: string }): Promise<void> {
+  const programmeName = String(input.programmeName ?? "").trim().slice(0, 60);
+  if (!programmeName) throw new Error("Give the programme a name.");
+  const siteName = input.siteName == null ? null : String(input.siteName).trim().slice(0, 120);
+  if (siteName === "") throw new Error("Give the site a name.");
   if (!Number.isInteger(input.seats) || input.seats < 1 || input.seats > 2000) throw new Error("Seats must be a whole number, 1 or more.");
   if (input.barSeats != null && (!Number.isInteger(input.barSeats) || input.barSeats < 0)) throw new Error("Bar seats must be a whole number.");
   const hours: GrowthSettings["tradingHours"] = {};
@@ -63,7 +89,8 @@ export async function saveSettings(sql: Db, venueId: string, input: Omit<GrowthS
   if (bad) throw new Error(`${bad} is not an email address.`);
   await getSettings(sql, venueId);
   // Seats change RevPASH, which is computed on read, so cached models stay valid.
-  await sql`update growth_settings set seats = ${input.seats}, bar_seats = ${input.barSeats}, trading_hours = ${JSON.stringify(hours)}::text::jsonb,
+  if (siteName) await sql`update venues set name = ${siteName} where id = ${venueId}`;
+  await sql`update growth_settings set programme_name = ${programmeName}, seats = ${input.seats}, bar_seats = ${input.barSeats}, trading_hours = ${JSON.stringify(hours)}::text::jsonb,
             server_figures_min_role = ${input.serverFiguresMinRole}, gain_areas = ${JSON.stringify(areas)}::text::jsonb,
             scorecard_emails = ${emails}, updated_at = now() where venue_id = ${venueId}`;
 }

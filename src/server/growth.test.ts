@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { dayFromIso, heat, isoDay, menu, period, servers, summary, tiles, weekOf } from "../growth/engine";
 import { clearData, dataStatus, getSettings, importChunk, importFile, finishImport, listImports, loadModel, loadSample, loadStored, saveSettings, savedMappings, startImport } from "./growth";
 import { addAction, listActions, listBets, listDecisions, listMeetings, loadStarter, logTurnaway, saveBet, saveDecision, saveMeeting, setActionStatus, turnawayTally } from "./growth-office";
+import { exportWorkspace, importWorkspace } from "./workspace";
 import { addIdea, buildScorecard, createTest, decideTest, emailScorecard, listEvents, listScorecards, markRead, programme, recheckGain, runScorecards, saveBridge, getBridge, saveEnquiry, listEnquiries, saveEvent, startTest } from "./growth-programme";
 
 const url = process.env.DATABASE_URL;
@@ -254,5 +255,46 @@ describe.skipIf(!url)("Growth Console", () => {
     expect([t.parties, t.guests, t.recent.length]).toEqual([2, 6, 3]);
     expect(t.byReason).toEqual([{ reason: "Fully booked", parties: 2, guests: 6 }]);
     expect((await turnawayTally(sql, venue)).recent).toEqual([]);
+  });
+
+  it("backs the programme up and restores it, matching sites by slug and leaving till data alone", async () => {
+    const companyId = (await sql`select company_id from venues where id = ${venue}`)[0]!.company_id as string;
+    const before = await exportWorkspace(sql, companyId);
+    expect(before.version).toBe(1);
+    expect(before.venues.map((v) => v.id).sort()).toEqual([venue, other].sort());
+    const count = (w: typeof before) => Object.fromEntries(Object.entries(w.tables).map(([k, v]) => [k, v.length]));
+    expect(count(before)).toMatchObject({ growth_actions: 37, growth_decisions: 9, growth_bets: 6, growth_meetings: 1, growth_turnaways: 3, growth_gains: 1 });
+    expect(before.tables.growth_settings!.every((r) => !("data_version" in r))).toBe(true);
+    const checks = (await sql`select count(*)::int as n from growth_checks where venue_id = ${other}`)[0]!.n;
+
+    // Change things, then restore: the backup wins, row for row.
+    await addAction(sql, other, { task: "Added after the backup", owner: "Owner" });
+    await sql`delete from growth_bets where venue_id = ${other}`;
+    await sql`update venues set name = 'Renamed since' where id = ${other}`;
+    const r = await importWorkspace(sql, companyId, JSON.parse(JSON.stringify(before)));
+    expect(r.skipped).toBe(0);
+    const after = await exportWorkspace(sql, companyId);
+    expect(count(after)).toEqual(count(before));
+    expect(after.tables.growth_bets).toEqual(before.tables.growth_bets);
+    expect(after.tables.growth_tests).toEqual(before.tables.growth_tests);
+    expect(after.venues).toEqual(before.venues);
+    expect((await sql`select count(*)::int as n from growth_checks where venue_id = ${other}`)[0]!.n).toBe(checks);
+    expect((await listActions(sql, other)).some((a) => a.task === "Added after the backup")).toBe(false);
+
+    // A backup taken from a database with different ids restores by slug; unknown sites and unknown columns are left out.
+    const foreign = JSON.parse(JSON.stringify(before).replaceAll(other, "99999999-0000-0000-0000-000000000001").replaceAll(venue, "99999999-0000-0000-0000-000000000002"));
+    foreign.venues.push({ id: "99999999-0000-0000-0000-000000000003", slug: "not-ours", name: "Elsewhere" });
+    foreign.tables.growth_actions.push({ ...foreign.tables.growth_actions[0], id: "99999999-0000-0000-0000-00000000aaaa", ref: "ZZ1", venue_id: "99999999-0000-0000-0000-000000000003" });
+    foreign.tables.growth_decisions[0].column_from_the_future = "ignored";
+    const r2 = await importWorkspace(sql, companyId, foreign);
+    expect(r2.skipped).toBe(1);
+    expect(count(await exportWorkspace(sql, companyId))).toEqual(count(before));
+    expect((await listActions(sql, other)).length).toBe(37);
+
+    // Rubbish is refused and nothing is lost.
+    await expect(importWorkspace(sql, companyId, { version: 2 })).rejects.toThrow(/not a programme backup/);
+    await expect(importWorkspace(sql, companyId, { ...before, tables: { growth_actions: "x" } })).rejects.toThrow(/not readable/);
+    await expect(importWorkspace(sql, companyId, { ...before, tables: { ...before.tables, growth_gains: [{ ...before.tables.growth_gains![0], test_id: "99999999-0000-0000-0000-00000000bbbb" }] } })).rejects.toThrow();
+    expect(count(await exportWorkspace(sql, companyId))).toEqual(count(before));
   });
 });

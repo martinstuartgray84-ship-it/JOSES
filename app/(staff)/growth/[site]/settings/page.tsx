@@ -1,5 +1,7 @@
 import { db } from "@/src/server/db";
+import { isDemo } from "@/src/server/demo";
 import { DAY_KEYS, getSettings } from "@/src/server/growth";
+import BackupTools from "../../../BackupTools";
 import ActionForm from "../../ActionForm";
 import { saveSettingsAction } from "../../actions";
 import { growthSite } from "../../ctx";
@@ -18,7 +20,13 @@ export default async function Settings({ params }: { params: Promise<{ site: str
       <ActionForm action={saveSettingsAction.bind(null, slug)} keep>
         <div className="gcols">
           <section className="box">
-            <h2>The room</h2>
+            <h2>Names</h2>
+            <div className="gform">
+              <label>Programme name<input name="programmeName" required maxLength={60} defaultValue={s.programmeName} /></label>
+              <label>Site name<input name="siteName" required maxLength={120} defaultValue={site.name} /></label>
+            </div>
+            <p className="gnote">The programme name is the team&rsquo;s own: &ldquo;Every Hour&rdquo; is only a working title.</p>
+            <h2 style={{ marginTop: 18 }}>The room</h2>
             <div className="gform">
               <label>Seats in the room<input name="seats" type="number" min={1} required defaultValue={s.seats} /></label>
               <label>Of which bar seats<input name="barSeats" type="number" min={0} defaultValue={s.barSeats ?? ""} /></label>
@@ -71,6 +79,14 @@ export default async function Settings({ params }: { params: Promise<{ site: str
           <button className="primary">Save settings</button>
         </div>
       </ActionForm>
+      <section className="box">
+        <h2>Backups</h2>
+        <p className="small muted" style={{ marginTop: 0 }}>
+          A backup holds the whole programme: plan, decisions, big bets, ideas, tests, gains, meetings, events, turn-aways and these settings. It does not hold the loaded till data.
+          {isDemo() && " In this demo your work is kept in this browser only, so download a backup to move it to another device or to keep it safe."}
+        </p>
+        <BackupTools demo={isDemo()} name={slug} />
+      </section>
     </>
   );
 }

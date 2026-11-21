@@ -21,10 +21,11 @@ export const DEMO_SECRET = "demo-mode-only-not-a-secret-0123456789abcdef";
 /** Days of invented trading history for the dashboard. */
 const HISTORY_DAYS = 28;
 
-const g = globalThis as unknown as { demoDb?: Promise<string> };
+const g = globalThis as unknown as { demoDb?: Promise<string>; demoBoot?: string; demoSeed?: string };
 
 /** Where the build step leaves a ready-made copy of the demo database (see scripts/build-demo-db.ts). */
 export const SNAPSHOT = path.join(process.cwd(), ".demo", "db.tar.gz");
+export const SEED = path.join(process.cwd(), ".demo", "seed.json");
 
 async function engine() {
   const [{ PGlite }, { btree_gist }, { pgcrypto }, { PGLiteSocketServer }] = await Promise.all([
@@ -50,7 +51,7 @@ async function listen(db: unknown, PGLiteSocketServer: Awaited<ReturnType<typeof
  * The slow, date-independent part: schema, seed, and the Growth sample and
  * starter pack at the first site. Run once at build time and saved as a snapshot.
  */
-export async function buildSnapshot(): Promise<Uint8Array> {
+export async function buildSnapshot(): Promise<{ db: Uint8Array; seed: string }> {
   const { PGlite, PGLiteSocketServer, extensions } = await engine();
   const db = await PGlite.create({ extensions });
   await db.exec(read("tests", "supabase_stub.sql"));
@@ -58,21 +59,40 @@ export async function buildSnapshot(): Promise<Uint8Array> {
   await db.exec(read("seed.sql"));
   const { sock, server } = await listen(db, PGLiteSocketServer);
   const sql = postgres({ path: sock, max: 1, prepare: false, onnotice: () => {} });
+  let seed = "";
   try {
     const [{ loadSample }, { loadStarter }] = await Promise.all([import("./growth"), import("./growth-office")]);
-    const [venue] = await sql`select id from venues order by name limit 1`;
+    const venues = await sql`select id from venues order by name`;
+    const venue = venues[0];
     if (venue) {
       await loadSample(sql, venue.id);
       await loadStarter(sql, venue.id);
       await exampleProgramme(sql, venue.id);
     }
+    // Create every site's settings row now, so merely opening a page later writes nothing.
+    const { getSettings } = await import("./growth");
+    for (const v of venues) await getSettings(sql, v.id);
+    // The programme as first loaded, kept so the demo can be put back to its starting point.
+    const { exportWorkspace } = await import("./workspace");
+    const [company] = await sql`select id from companies order by created_at limit 1`;
+    seed = JSON.stringify(await exportWorkspace(sql, company!.id));
   } finally {
     await sql.end();
     await server.stop();
   }
+  // A revision counter for the programme data: every row written bumps it. The
+  // browser keeps the latest copy and its revision, and puts it back when it
+  // meets a server that is behind (a restart, or another serverless instance).
+  const { WORKSPACE_TABLES } = await import("./workspace");
+  await db.exec(`
+    create table demo_rev (id int primary key default 1 check (id = 1), rev bigint not null default 0);
+    insert into demo_rev default values;
+    create function demo_bump() returns trigger language plpgsql as $$ begin update demo_rev set rev = rev + 1; return null; end $$;
+    ${[...WORKSPACE_TABLES, "venues"].map((t) => `create trigger demo_bump after insert or update or delete on ${t} for each row execute function demo_bump();`).join("\n")}
+  `);
   const dump = await db.dumpDataDir("gzip");
   await db.close();
-  return new Uint8Array(await dump.arrayBuffer());
+  return { db: new Uint8Array(await dump.arrayBuffer()), seed };
 }
 
 /** Examples so the demo shows a programme in motion: one gain banked, one test live, one waiting on a decision. */
@@ -94,7 +114,15 @@ async function boot(): Promise<string> {
   const started = Date.now();
   const { PGlite, PGLiteSocketServer, extensions } = await engine();
   // Start from the build's snapshot when there is one; otherwise build it now (local development).
-  const snapshot = existsSync(SNAPSHOT) ? readFileSync(SNAPSHOT) : await buildSnapshot();
+  let snapshot: Uint8Array;
+  if (existsSync(SNAPSHOT) && existsSync(SEED)) {
+    snapshot = readFileSync(SNAPSHOT);
+    g.demoSeed = readFileSync(SEED, "utf8");
+  } else {
+    const built = await buildSnapshot();
+    snapshot = built.db;
+    g.demoSeed = built.seed;
+  }
   const db = await PGlite.create({ extensions, loadDataDir: new Blob([new Uint8Array(snapshot)]) });
   // Trading history is generated relative to today, so it is added at start-up, not baked in.
   // The script is written for psql: drop its meta-commands and fill in its one variable.
@@ -104,6 +132,23 @@ async function boot(): Promise<string> {
   const { sock } = await listen(db, PGLiteSocketServer);
   console.log(`Demo database ready in ${Date.now() - started} ms. Set DATABASE_URL to use a real one.`);
   return sock;
+}
+
+/** Identifies this server process's copy of the demo database. */
+export const demoBootId = (): string => (g.demoBoot ??= crypto.randomUUID());
+
+/** Where this copy of the demo database is: which process, and how many programme rows have been written to it. */
+export async function demoState(sql: postgres.Sql): Promise<{ bootId: string; rev: number }> {
+  const [r] = await sql`select rev::int as rev from demo_rev`;
+  return { bootId: demoBootId(), rev: r?.rev ?? 0 };
+}
+
+/** The programme as the demo first loads it (a workspace backup document), once the database has started. */
+export const demoSeed = (): string | null => g.demoSeed ?? null;
+
+/** After restoring a browser's copy, carry its revision over so every copy agrees on which is newest. */
+export async function setDemoRev(sql: postgres.Sql, rev: number): Promise<void> {
+  await sql`update demo_rev set rev = ${Math.max(0, Math.floor(rev))}`;
 }
 
 /** A connected socket to the demo database, starting it on first use. */

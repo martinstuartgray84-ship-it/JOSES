@@ -80,9 +80,19 @@ a.snav-brand { color: var(--text); text-decoration: none; }
 .snav-sep { align-self: center; padding: 0 6px 0 14px; margin-left: 8px; border-left: 1px solid var(--line); color: var(--muted); font-size: 0.72rem;
   text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; min-height: 18px; }
 
-/* Second bar, shown only inside the platform: the product being prototyped. */
-.pnav { display: flex; align-items: center; gap: 4px 14px; flex-wrap: wrap; padding: 4px 16px; background: var(--bg); border-bottom: 1px solid var(--line); }
-.pnav-tag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--accent); white-space: nowrap; }
-.pnav .snav-links a { padding: 6px 10px; font-size: 0.92rem; }
-.snav select { margin-left: auto; }
+/* The two sides share one bar; each side tints it with its own colour. */
+.snav { border-bottom-width: 2px; }
+.snav.side-programme { border-bottom-color: var(--accent); }
+.snav.side-product { border-bottom-color: var(--series-1, #2a78d6); }
+.snav-links a[aria-current="true"] { color: var(--text); }
 @media (max-width: 640px) { .snav-brand { display: inline !important; font-size: 0.95rem; } }
+/* Second bar, shown only on the product side: its modules, grouped. */
+.pnav { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px 14px; padding: 4px 16px 0; background: var(--card); border-bottom: 1px solid var(--line); }
+.pnav-groups { display: flex; gap: 0 14px; overflow-x: auto; scrollbar-width: none; min-width: 0; align-items: flex-end; }
+.pnav-group { display: flex; align-items: flex-end; gap: 2px; position: relative; padding-top: 16px; flex: none; }
+.pnav-label { position: absolute; top: 0; left: 10px; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); white-space: nowrap; }
+.pnav a { padding: 7px 10px; text-decoration: none; color: var(--muted); font-weight: 600; white-space: nowrap; font-size: 0.92rem; border-bottom: 2px solid transparent; }
+.pnav a:hover { color: var(--text); }
+.pnav a.on { color: var(--text); border-bottom-color: var(--series-1, #2a78d6); }
+.pnav select { width: auto; padding: 5px 8px; font-weight: 600; margin-bottom: 4px; }
+.ws-note { margin: 0; padding: 6px 12px; border-radius: 8px; background: var(--accent-soft); font-size: 0.88rem; }

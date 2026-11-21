@@ -14,8 +14,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en-GB">
       <body>
         {isDemo() && (
-          <p className="demo-banner" role="status">
-            <strong>Demo.</strong> Invented sample data on a temporary database: anything you change is lost when the server restarts. Connect a database (DATABASE_URL) to go live.
+          <p className="demo-banner" role="note">
+            <strong>Demonstration.</strong> The sales figures are invented samples, not this restaurant&rsquo;s own.
           </p>
         )}
         {children}
