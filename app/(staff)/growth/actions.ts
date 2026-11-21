@@ -16,7 +16,8 @@ async function venue(slug: string) {
   const site = await staffSite(slug);
   return { id: site.id, sql: db() };
 }
-const done = (slug: string) => revalidatePath(`/growth/${slug}`, "layout");
+// The site and programme names show in the bars above every page, so refresh from the top.
+const done = (_slug: string) => revalidatePath("/", "layout");
 const fields = (fd: FormData) => Object.fromEntries([...fd.entries()].map(([k, v]) => [k, typeof v === "string" ? v : ""]));
 
 // --- data ---
@@ -67,6 +68,8 @@ export async function saveSettingsAction(slug: string, fd: FormData): Promise<Ac
     const names = fd.getAll("area_name").map(String);
     const captains = fd.getAll("area_captain").map(String);
     await saveSettings(v.sql, v.id, {
+      programmeName: f.programmeName ?? "",
+      siteName: f.siteName ?? "",
       seats: Number(f.seats),
       barSeats: f.barSeats === "" ? null : Number(f.barSeats),
       tradingHours: hours,

@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { db } from "@/src/server/db";
+import { demoState, isDemo } from "@/src/server/demo";
 import { dataStatus } from "@/src/server/growth";
+import { exportWorkspace } from "@/src/server/workspace";
 import { isStaff } from "@/src/server/staff";
 import { getSite } from "@/src/server/booking";
 import GrowthNav from "../GrowthNav";
+import WorkspaceKeeper from "../../WorkspaceKeeper";
 import "../../dashboard/dashboard.css";
 import "../growth.css";
 
@@ -20,8 +24,17 @@ export default async function GrowthLayout({ children, params }: { children: Rea
   const site = (await isStaff()) ? await getSite(db(), slug).catch(() => null) : null;
   if (!site) return <>{children}</>;
   const status = await dataStatus(db(), site.id);
+  // Demo mode: hand the browser the current copy of the programme whenever it does not already hold it.
+  let keeper: React.ReactNode = null;
+  if (isDemo()) {
+    const state = await demoState(db());
+    const held = (await cookies()).get("ws")?.value;
+    const data = held === `${state.bootId}:${state.rev}` ? null : JSON.stringify(await exportWorkspace(db(), site.companyId));
+    keeper = <WorkspaceKeeper bootId={state.bootId} rev={state.rev} data={data} />;
+  }
   return (
     <main className="page dash growth">
+      {keeper}
       <div className="gtop">
         <strong>{site.name}</strong>
         {status.checks === 0 ? (

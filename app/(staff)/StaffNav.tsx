@@ -3,74 +3,59 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-// Two layers. The app is the engagement workspace: the programme run with the
-// first restaurant. Inside it sits the platform: the product restaurants will run.
-// Platform modules that are per site: /<section>/<site>/...
-const PLATFORM_SITE = [
-  { key: "diary", label: "Bookings and diary" },
-  { key: "pos", label: "Till" },
-  { key: "floor", label: "Floor" },
-  { key: "ops", label: "Ops" },
-  { key: "kds", label: "Kitchen & bar" },
-  { key: "menu", label: "Menu" },
-] as const;
-// Company-wide modules.
-const PLATFORM_COMPANY = [
-  { key: "dashboard", label: "Dashboard" },
-  { key: "guests", label: "Guests" },
-  { key: "marketing", label: "Marketing" },
-] as const;
+// Two sides. The programme is the engagement at the first site. The product is
+// what a restaurant runs on; its modules are grouped the way a restaurant thinks.
+const PRODUCT: { label: string; mods: { key: string; label: string; perSite: boolean }[] }[] = [
+  { label: "Front of house", mods: [{ key: "diary", label: "Bookings", perSite: true }, { key: "floor", label: "Floor", perSite: true }, { key: "pos", label: "Till", perSite: true }] },
+  { label: "Kitchen and bar", mods: [{ key: "kds", label: "Screens", perSite: true }, { key: "menu", label: "Menu", perSite: true }, { key: "ops", label: "Ops", perSite: true }] },
+  { label: "Guests", mods: [{ key: "guests", label: "Guest list", perSite: false }, { key: "marketing", label: "Marketing", perSite: false }] },
+  { label: "Numbers", mods: [{ key: "dashboard", label: "Dashboard", perSite: false }] },
+];
+const MODS = PRODUCT.flatMap((g) => g.mods);
 
-export default function StaffNav({ sites }: { sites: { slug: string; name: string }[] }) {
+export default function StaffNav({ sites, programmeName }: { sites: { slug: string; name: string }[]; programmeName: string }) {
   const path = usePathname();
   const router = useRouter();
   const [, section, maybeSite] = path.split("/");
+  const mod = MODS.find((m) => m.key === section);
+  const side = section === "growth" ? "programme" : mod || section === "suite" ? "product" : "home";
   const site = sites.find((s) => s.slug === maybeSite)?.slug ?? sites[0]?.slug ?? "";
-  const inModule = PLATFORM_SITE.some((s) => s.key === section) || PLATFORM_COMPANY.some((s) => s.key === section);
-  const inPlatform = inModule || section === "suite";
-  const siteSection = section === "growth" || PLATFORM_SITE.some((s) => s.key === section);
 
   return (
     <>
-      <nav className="snav" aria-label="Main">
-        <Link href={`/growth/${site}`} className="snav-brand">Jose&rsquo;s growth programme</Link>
+      <nav className={`snav side-${side}`} aria-label="Main">
+        <Link href="/" className="snav-brand">{programmeName}</Link>
         <div className="snav-links">
-          <Link href={`/growth/${site}`} className={!inPlatform ? "on" : ""}>Programme</Link>
-          <Link href="/suite" className={inPlatform ? "on" : ""}>Platform</Link>
+          <Link href={`/growth/${sites[0]?.slug ?? ""}`} className={side === "programme" ? "on" : ""} aria-current={side === "programme" ? "true" : undefined}>Programme</Link>
+          <Link href="/suite" className={side === "product" ? "on" : ""} aria-current={side === "product" ? "true" : undefined}>Product</Link>
         </div>
-        {sites.length > 1 && (
-          <select
-            aria-label="Site"
-            value={site}
-            onChange={(e) => {
-              const next = e.target.value;
-              router.push(siteSection ? `/${section}/${next}` : inPlatform ? path : `/growth/${next}`);
-            }}
-          >
-            {sites.map((s) => (
-              <option key={s.slug} value={s.slug}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        )}
       </nav>
-      {inPlatform && (
-        <nav className="pnav" aria-label="Platform modules">
-          <span className="pnav-tag">Platform prototype</span>
-          <div className="snav-links">
-            <Link href="/suite" className={section === "suite" ? "on" : ""}>Overview</Link>
-            {PLATFORM_SITE.map((s) => (
-              <Link key={s.key} href={`/${s.key}/${site}`} className={section === s.key ? "on" : ""}>
-                {s.label}
-              </Link>
-            ))}
-            {PLATFORM_COMPANY.map((s) => (
-              <Link key={s.key} href={`/${s.key}`} className={section === s.key ? "on" : ""}>
-                {s.label}
-              </Link>
+      {side === "product" && (
+        <nav className="pnav" aria-label="Product">
+          <div className="pnav-groups">
+            <div className="pnav-group">
+              <Link href="/suite" className={section === "suite" ? "on" : ""}>Overview</Link>
+            </div>
+            {PRODUCT.map((g) => (
+              <div key={g.label} className="pnav-group">
+                <span className="pnav-label">{g.label}</span>
+                {g.mods.map((m) => (
+                  <Link key={m.key} href={m.perSite ? `/${m.key}/${site}` : `/${m.key}`} className={section === m.key ? "on" : ""}>
+                    {m.label}
+                  </Link>
+                ))}
+              </div>
             ))}
           </div>
+          {sites.length > 1 && mod?.perSite && (
+            <select aria-label="Site" value={site} onChange={(e) => router.push(`/${section}/${e.target.value}`)}>
+              {sites.map((s) => (
+                <option key={s.slug} value={s.slug}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          )}
         </nav>
       )}
     </>
