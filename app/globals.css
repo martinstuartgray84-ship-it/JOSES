@@ -79,3 +79,6 @@ button:disabled { opacity: 0.6; cursor: progress; }
 .details dd { margin: 0; }
 .confirm { display: grid; gap: 8px; }
 .confirm p { margin: 0; }
+
+.demo-banner { margin: 0; padding: 8px 16px; background: #fdf1d6; color: #3a2a00; border-bottom: 1px solid #a26b00; font-size: 0.88rem; text-align: center; }
+@media print { .demo-banner { display: none; } }

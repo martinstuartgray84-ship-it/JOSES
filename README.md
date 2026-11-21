@@ -177,3 +177,9 @@ npm run test:db    # throwaway Postgres 15+: migrations, seed, SQL tests, then b
 - **Try it:** Growth → Data → Load sample data. Nothing real belongs in `fixtures/`.
 - **Scorecard:** the hourly job (`/api/cron/hourly`) builds last week's card from Monday 07:00 site time once that week's sales are loaded, and emails the addresses under Growth → Settings.
 - **Tests:** `npm test` (engine, golden), `npm run test:db` (import, programme, row-level security between organisations).
+
+## Demo mode
+
+With no `DATABASE_URL`, the app runs on a Postgres inside the server process (PGlite, `src/server/demo.ts`). On first request it applies every migration, the seed, four weeks of invented trading history and the Growth sample data and starter pack, in a few seconds. Staff screens are open without a password and every page carries a demo banner.
+
+It is for looking around, not for trading: the database is rebuilt on every restart, and on serverless hosting each instance has its own copy, so changes can disappear between requests. Setting `DATABASE_URL` (with `STAFF_PASSWORD` and `STAFF_SESSION_SECRET`) switches to the real database and turns the sign-in back on. The whole database test suite passes against the embedded database.

@@ -6,6 +6,7 @@ import { db } from "@/src/server/db";
 import { getSite, type Site } from "@/src/server/booking";
 import { staffCompany } from "@/src/server/guard";
 import { dataStatus, getSettings, loadModel, type GrowthSettings } from "@/src/server/growth";
+import { isDemo } from "@/src/server/demo";
 import { requireStaff, tillUserId } from "@/src/server/staff";
 import { period, type Model, type Period } from "@/src/growth/engine";
 
@@ -46,7 +47,7 @@ export async function growthCtx(slug: string, sp: SP, page = ""): Promise<Ctx> {
  * in on the till.
  */
 export async function canSeeServers(settings: GrowthSettings, companyId: string): Promise<boolean> {
-  if (settings.serverFiguresMinRole === "host") return true;
+  if (settings.serverFiguresMinRole === "host" || isDemo()) return true;
   const staffId = await tillUserId();
   if (!staffId) return false;
   const [s] = await db()`select 1 from staff_members where id = ${staffId} and company_id = ${companyId} and active and role = 'manager'`;

@@ -6,7 +6,12 @@ const embedOrigins = process.env.EMBED_ORIGINS ?? "";
 
 const nextConfig: NextConfig = {
   // The Growth sample data is read from disk when a manager loads it.
-  outputFileTracingIncludes: { "/growth/[site]/data": ["./fixtures/growth/sample/*.csv"] },
+  // and by demo mode, which also builds its database from the migrations and seed at start-up.
+  outputFileTracingIncludes: {
+    "/**": ["./fixtures/growth/sample/*.csv", "./supabase/migrations/*.sql", "./supabase/seed.sql", "./supabase/demo/history.sql", "./supabase/tests/supabase_stub.sql",
+      "./node_modules/@electric-sql/pglite/dist/**/*.{wasm,data,tar.gz,js,cjs}", "./node_modules/@electric-sql/pglite-socket/dist/**/*.{js,cjs}"],
+  },
+  serverExternalPackages: ["@electric-sql/pglite", "@electric-sql/pglite-socket"],
   async headers() {
     return [
       {
