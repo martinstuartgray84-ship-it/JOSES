@@ -5,12 +5,15 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { DEMO_SECRET, isDemo } from "./demo";
 
 const COOKIE = "staff_session";
 const TTL_SECONDS = 60 * 60 * 16; // one long shift
 
 function secret(): string {
   const s = process.env.STAFF_SESSION_SECRET;
+  // Demo mode has no real data, so it runs without configuration.
+  if (isDemo() && !s) return DEMO_SECRET;
   if (!s || s.length < 32) throw new Error("STAFF_SESSION_SECRET must be set (32+ characters)");
   return s;
 }
@@ -123,6 +126,8 @@ export async function endStaffSession() {
 }
 
 export async function isStaff(): Promise<boolean> {
+  // Demo mode: sample data only, so the staff screens are open. Setting DATABASE_URL turns the sign-in back on.
+  if (isDemo()) return true;
   return verifySessionValue((await cookies()).get(COOKIE)?.value);
 }
 

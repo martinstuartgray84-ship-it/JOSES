@@ -25,6 +25,8 @@
     "vitest": "^2.1.0"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.17",
+    "@electric-sql/pglite-socket": "^0.2.20",
     "next": "^16.3.8",
     "postgres": "^3.4.9",
     "react": "^19.3.0",

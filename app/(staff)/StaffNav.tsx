@@ -11,6 +11,7 @@ const SITE_SECTIONS = [
   { key: "ops", label: "Ops" },
   { key: "kds", label: "Kitchen & bar" },
   { key: "menu", label: "Menu" },
+  { key: "growth", label: "Growth" },
 ] as const;
 
 // Company-wide sections.
